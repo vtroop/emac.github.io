@@ -8,49 +8,112 @@
     <atom:link href="/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description></description>
-    <pubDate>Wed, 23 Nov 2016 04:55:32 GMT</pubDate>
+    <pubDate>Wed, 23 Nov 2016 16:34:58 GMT</pubDate>
     <generator>http://hexo.io/</generator>
     
     <item>
-      <title>微服务化改造系列之一：总览</title>
-      <link>http://emacoo.cn/2016/11/13/microservice-overview/</link>
-      <guid>http://emacoo.cn/2016/11/13/microservice-overview/</guid>
-      <pubDate>Sat, 12 Nov 2016 16:00:00 GMT</pubDate>
+      <title>微服务化改造系列之二：服务注册中心</title>
+      <link>http://emacoo.cn/arch/microservice-registry-center/</link>
+      <guid>http://emacoo.cn/arch/microservice-registry-center/</guid>
+      <pubDate>Sat, 19 Nov 2016 16:00:00 GMT</pubDate>
       <description>
       
-        &lt;h4 id=&quot;1-写在前面&quot;&gt;&lt;a href=&quot;#1-写在前面&quot; class=&quot;headerlink&quot; title=&quot;1 写在前面&quot;&gt;&lt;/a&gt;1 写在前面&lt;/h4&gt;&lt;h5 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;
+        &lt;blockquote&gt;
+&lt;p&gt;前情概要：&lt;a href=&quot;http://emacoo.cn/blog/microservice-overview&quot;&gt;微服务化改造系列之一：总览&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;服务注册中心概述&quot;&gt;&lt;a href=&quot;#服
       
       </description>
       
-      <content:encoded><![CDATA[<h4 id="1-写在前面"><a href="#1-写在前面" class="headerlink" title="1 写在前面"></a>1 写在前面</h4><h5 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h5><p>技术圈流行一句话，凡脱离业务谈架构的，都是耍流氓。作为微服务改造系列的第一篇博客，首先介绍一下实施这次技术改造的背景。</p>
+      <content:encoded><![CDATA[<blockquote>
+<p>前情概要：<a href="http://emacoo.cn/blog/microservice-overview">微服务化改造系列之一：总览</a></p>
+</blockquote>
+<h2 id="服务注册中心概述"><a href="#服务注册中心概述" class="headerlink" title="服务注册中心概述"></a>服务注册中心概述</h2><p>这篇文章是微服务化改造系列的第二篇，主题是服务注册中心。作为微服务架构最基础也是最重要的组件之一，服务注册中心本质上是为了解耦服务提供者和服务消费者。对于任何一个微服务，原则上都应存在或者支持多个提供者，这是由微服务的分布式属性决定的。更进一步，为了支持弹性扩缩容特性，一个微服务的提供者的数量和分布往往是动态变化的，也是无法预先确定的。因此，原本在单体应用阶段常用的静态LB机制就不再适用了，需要引入额外的组件来管理微服务提供者的注册与发现，而这个组件就是服务注册中心。</p>
+<p>设计或者选型一个服务注册中心，首先要考虑的就是服务注册与发现机制。纵观当下各种主流的服务注册中心解决方案，大致可归为三类：</p>
+<ul>
+<li>应用内：直接集成到应用中，依赖于应用自身完成服务的注册与发现，最典型的是Netflix提供的<a href="https://github.com/Netflix/eureka" target="_blank" rel="external">Eureka</a></li>
+<li>应用外：把应用当成黑盒，通过应用外的某种机制将服务注册到注册中心，最小化对应用的侵入性，比如Airbnb的<a href="http://nerds.airbnb.com/smartstack-service-discovery-cloud/" target="_blank" rel="external">SmartStack</a>，HashiCorp的<a href="https://www.consul.io/" target="_blank" rel="external">Consul</a></li>
+<li>DNS：将服务注册为DNS的SRV记录，严格来说，是一种特殊的应用外注册方式，<a href="https://github.com/skynetservices/skydns" target="_blank" rel="external">SkyDNS</a>是其中的代表</li>
+</ul>
+<p><em>注1：对于第一类注册方式，除了Eureka这种一站式解决方案，还可以基于ZooKeeper或者Etcd自行实现一套服务注册机制，这在大公司比较常见，但对于小公司而言显然性价比太低。</em></p>
+<p><em>注2：由于DNS固有的缓存缺陷，本文不对第三类注册方式作深入探讨。</em></p>
+<p>除了基本的服务注册与发现机制，从开发和运维角度，至少还要考虑如下五个方面：</p>
+<ul>
+<li>测活：服务注册之后，如何对服务进行测活以保证服务的可用性？</li>
+<li>负载均衡：当存在多个服务提供者时，如何均衡各个提供者的负载？</li>
+<li>集成：在服务提供端或者调用端，如何集成注册中心？</li>
+<li>运行时依赖：引入注册中心之后，对应用的运行时环境有何影响？</li>
+<li>可用性：如何保证注册中心本身的可用性，特别是消除单点故障？</li>
+</ul>
+<p>以下就围绕上述几个方面，简单分析一下Eureka，SmartStack，Consul的利弊。</p>
+<h3 id="Eureka"><a href="#Eureka" class="headerlink" title="Eureka"></a>Eureka</h3><p><img src="eureka.png" alt=""></p>
+<p>从设计角度来看，Eureka可以说是无懈可击，注册中心、提供者、调用者边界清晰，通过去中心化的集群支持保证了注册中心的整体可用性，但缺点是Eureka属于应用内的注册方式，对应用的侵入性太强，且只支持Java应用。</p>
+<h3 id="SmartStack"><a href="#SmartStack" class="headerlink" title="SmartStack"></a>SmartStack</h3><p><img src="smartstack.png" alt=""></p>
+<p>SmartStack可以说是三种方案中最复杂的，涉及了ZooKeeper、HAProxy、Nerve和Synapse四种异构组件，对运维提出了很高的要求。它最大的好处是对应用零侵入，且适用于任意类型的应用。</p>
+<h3 id="Consul"><a href="#Consul" class="headerlink" title="Consul"></a>Consul</h3><p><img src="consul-standard.png" alt=""></p>
+<p>Consul本质上属于应用外的注册方式，但可以通过SDK简化注册流程。而服务发现恰好相反，默认依赖于SDK，但可以通过Consul Template（下文会提到）去除SDK依赖。</p>
+<h2 id="方案"><a href="#方案" class="headerlink" title="方案"></a>方案</h2><p>最终我们选择了Consul作为服务注册中心的实现方案，主要原因有两点：</p>
+<ol>
+<li>最小化对已有应用的侵入性，这也是贯穿我们整个微服务化改造的原则之一</li>
+<li>降低运维的复杂度，Consul Agent既可以运行在服务器模式，又可以运行在客户端模式</li>
+</ol>
+<h3 id="Consul-Template"><a href="#Consul-Template" class="headerlink" title="Consul Template"></a>Consul Template</h3><p>上文提到使用Consul，默认服务调用者需要依赖Consul SDK来发现服务，这就无法保证对应用的零侵入性。所幸通过<a href="https://github.com/hashicorp/consul-template" target="_blank" rel="external">Consul Template</a>，可以定时从Consul集群获取最新的服务提供者列表并刷新LB配置（比如nginx的upstream），这样对于服务调用者而言，只需要配置一个统一的服务调用地址即可。改造后的调用关系如下：</p>
+<p><img src="consul-template.png" alt=""></p>
+<h3 id="Spring-Cloud-Consul"><a href="#Spring-Cloud-Consul" class="headerlink" title="Spring Cloud Consul"></a>Spring Cloud Consul</h3><p>由于我们选用了Spring Boot作为统一的微服务实现框架，很自然的，可以利用Spring Cloud提供的Consul组件进一步简化服务注册流程，省去额外的服务提供端的Consul配置。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="https://www.consul.io/docs/index.html" target="_blank" rel="external">CONSUL DOCUMENTATION</a></li>
+<li><a href="https://github.com/hashicorp/consul-template" target="_blank" rel="external">consul-template</a></li>
+<li><a href="http://cloud.spring.io/spring-cloud-consul/" target="_blank" rel="external">Spring Cloud Consul</a></li>
+<li><a href="http://cloud.spring.io/spring-cloud-netflix/spring-cloud-netflix.html" target="_blank" rel="external">Spring Cloud Netflix</a></li>
+<li><a href="http://nobodyiam.com/2016/06/25/dive-into-eureka/" target="_blank" rel="external">Dive into Eureka</a></li>
+<li><a href="http://nerds.airbnb.com/smartstack-service-discovery-cloud/" target="_blank" rel="external">SmartStack: Service Discovery in the Cloud</a></li>
+<li><a href="http://jasonwilder.com/blog/2014/02/04/service-discovery-in-the-cloud/" target="_blank" rel="external">Open-Source Service Discovery</a></li>
+</ul>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/arch/microservice-registry-center/#disqus_thread</comments>
+    </item>
+    
+    <item>
+      <title>微服务化改造系列之一：总览</title>
+      <link>http://emacoo.cn/arch/microservice-overview/</link>
+      <guid>http://emacoo.cn/arch/microservice-overview/</guid>
+      <pubDate>Sat, 12 Nov 2016 16:00:00 GMT</pubDate>
+      <description>
+      
+        &lt;h2 id=&quot;1-写在前面&quot;&gt;&lt;a href=&quot;#1-写在前面&quot; class=&quot;headerlink&quot; title=&quot;1 写在前面&quot;&gt;&lt;/a&gt;1 写在前面&lt;/h2&gt;&lt;h3 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;
+      
+      </description>
+      
+      <content:encoded><![CDATA[<h2 id="1-写在前面"><a href="#1-写在前面" class="headerlink" title="1 写在前面"></a>1 写在前面</h2><h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>技术圈流行一句话，凡脱离业务谈架构的，都是耍流氓。作为微服务改造系列的第一篇博客，首先介绍一下实施这次技术改造的背景。</p>
 <p>第一，我所在公司（简称XR）的后台服务采用的主技术栈是Scala，虽然开发效率很高，但也带来一系列的副作用。1.由于Scala语言强大的表达能力和丰富的函数式特性，很容易写出俗称“意大利面条”式的代码，一个类文件动辄上千行，代码的可读性非常差，导致可维护性也很差。2.编译Scala源码时首先需要将Scala源码转换成Java源码然后再通过JVM进行编译，加上隐式类型的存在进一步拖慢了编译期间的类型推导，Scala的编译速度比Java足足慢了一个数量级，这个差异在代码量少的时候还不明显，但随着代码量的上升，就成了团队的一个nightmare，试想本地全量编译一次需要10+分钟。3.Scala小众语言的标签决定了Scala程序员的稀缺性，晦涩难懂的官方文档拔高了学习曲线，后果就是高昂的招聘成本和漫长的培养时间。以上这些副作用不但抵消了先期开发效率上的优势，而且使得对新需求的响应能力越来越慢，技术负债也越垒越高。</p>
 <p>第二，历经2年多的产品迭代，整个后台服务项目越来越庞大，已经成为一个典型意义上的单体应用（也就是Martin Fowler常说的monolithic application）：1.各个业务模块犬牙交错，重复代码随处可见，补丁代码越打越多。2.任何一个改动都需要一次全量发布，哪怕是修改一句文案。</p>
 <p>第三，与微服务化改造同时进行的是容器化改造，如果不对上述单体应用进行拆分，很多容器化带来的好处就会被削弱，甚至毫无意义，比如提高资源利用率（CPU型应用和内存型应用搭配部署），异构应用的环境隔离能力等。</p>
-<h5 id="限制"><a href="#限制" class="headerlink" title="限制"></a>限制</h5><p>谷歌前研发总监Tiger曾经说过，一个系统的演化一般会经历三个阶段，首先是under-engineer，然后是over-engineer，最后才是right-engineer。考虑到参与此次微服务改造的人员有限（一人主导，多人配合），同时也是团队第一次尝试做这类系统性的改造，最后我们决定采取一条比较实用的改良式路线：</p>
+<h3 id="限制"><a href="#限制" class="headerlink" title="限制"></a>限制</h3><p>谷歌前研发总监Tiger曾经说过，一个系统的演化一般会经历三个阶段，首先是under-engineer，然后是over-engineer，最后才是right-engineer。考虑到参与此次微服务改造的人员有限（一人主导，多人配合），同时也是团队第一次尝试做这类系统性的改造，最后我们决定采取一条比较实用的改良式路线：</p>
 <ol>
 <li>最小化对已有应用的侵入性</li>
 <li>偏好主流的微服务框架</li>
 <li>只做必要的微服务治理</li>
 </ol>
 <p>第一条定下了此次改造的基调，降低了方案无法落地的风险，确保了项目的整体可行性。第二条让我们站在巨人的肩膀上，不重复造轮子，聚焦在问题本身，而不是工具。第三条缩减项目范围，避免过度工程，以战养兵，不打无用之仗。</p>
-<h4 id="2-微服务简介"><a href="#2-微服务简介" class="headerlink" title="2 微服务简介"></a>2 微服务简介</h4><h5 id="3个关键词"><a href="#3个关键词" class="headerlink" title="3个关键词"></a>3个关键词</h5><p>有关微服务的定义，最权威的版本莫属微服务之父Martin Fowler在<a href="http://martinfowler.com/microservices/" target="_blank" rel="external">microservices</a>一文中所述：</p>
+<h2 id="2-微服务简介"><a href="#2-微服务简介" class="headerlink" title="2 微服务简介"></a>2 微服务简介</h2><h3 id="3个关键词"><a href="#3个关键词" class="headerlink" title="3个关键词"></a>3个关键词</h3><p>有关微服务的定义，最权威的版本莫属微服务之父Martin Fowler在<a href="http://martinfowler.com/microservices/" target="_blank" rel="external">microservices</a>一文中所述：</p>
 <blockquote>
 <p>In short, the microservice architectural style is an approach to developing a single application as a suite of small services, each running in its own process and communicating with lightweight mechanisms, often an HTTP resource API. These services are built around business capabilities and independently deployable by fully automated deployment machinery. – James Lewis and Martin Fowler</p>
 </blockquote>
 <p>注意其中有3个关键词，small，independently deployable和automated deployment。small对应的就是微服务的微，很多初次接触微服务的同学对微的理解往往会停留在实现层面，以为代码少就是微，但实际上，这里的微更多的是体现在逻辑层面。微服务的一个重要设计原则是share as little as possible，什么意思呢？就是说每个微服务应该设计成边界清晰不重叠，数据独享不共享，也就是我们常说的高内聚、低耦合。保证了small，才能做到independently deployable。而实现automated deployment的关键是DevOps文化，可参见Fowler另一篇谈<a href="http://martinfowler.com/bliki/DevOpsCulture.html" target="_blank" rel="external">DevOps</a>的文章。</p>
 <p>需要提醒的是，随着业务复杂度的上升，一个微服务可能需要拆分为更多更细粒度的微服务，比方说，一开始只是一个简单的订单服务，后面逐步拆分出清算，支付，结算，对账等其他服务。</p>
-<h5 id="康威定律"><a href="#康威定律" class="headerlink" title="康威定律"></a>康威定律</h5><p>与单体应用拆分为微服务的过程类似，随着公司规模的不断扩大，一个组织势必会分化出多个更小的组织。根据康威定律，组织结构决定系统结构，因此，从这个层面来说，微服务也是一种必然。</p>
+<h3 id="康威定律"><a href="#康威定律" class="headerlink" title="康威定律"></a>康威定律</h3><p>与单体应用拆分为微服务的过程类似，随着公司规模的不断扩大，一个组织势必会分化出多个更小的组织。根据康威定律，组织结构决定系统结构，因此，从这个层面来说，微服务也是一种必然。</p>
 <blockquote>
 <p>康威定律（Conway’s Law）：“Any organization that design a system (defined broadly) will produce a design whose structure is a copy of the organization’s communication structure. - Melvin Conway, 1968</p>
 </blockquote>
 <p><img src="conway.png" alt=""></p>
-<h5 id="取舍"><a href="#取舍" class="headerlink" title="取舍"></a>取舍</h5><p>从本质上来看，相对单体应用，微服务是以牺牲强一致性、提高部署复杂性为代价，换取更彻底的分布式特性，比如异构性和强隔离性。对应CAP理论，就是用Consistency换Partition。异构性比较容易理解，通过定义统一的API规范（一般采用REST风格），每个微服务团队可以根据各自的能力矩阵选用最适合的技术栈，而不是所有人必须使用相同的技术栈。强隔离性指的是，对于一个典型的单体应用，隔离性最高只能体现到模块级别，由于共享同一个代码仓库，模块的边界往往比较模糊，需要人为定义很多规范来保证良好的隔离性，但无论如何强调，稍一疏忽，就会产生“越界”行为，时间愈长，维护隔离性的成本愈高。而到了微服务阶段，自带应用级别的隔离性，“越界”的成本大大提升，无需任何规范，架构本身就保证了隔离性。</p>
+<h3 id="取舍"><a href="#取舍" class="headerlink" title="取舍"></a>取舍</h3><p>从本质上来看，相对单体应用，微服务是以牺牲强一致性、提高部署复杂性为代价，换取更彻底的分布式特性，比如异构性和强隔离性。对应CAP理论，就是用Consistency换Partition。异构性比较容易理解，通过定义统一的API规范（一般采用REST风格），每个微服务团队可以根据各自的能力矩阵选用最适合的技术栈，而不是所有人必须使用相同的技术栈。强隔离性指的是，对于一个典型的单体应用，隔离性最高只能体现到模块级别，由于共享同一个代码仓库，模块的边界往往比较模糊，需要人为定义很多规范来保证良好的隔离性，但无论如何强调，稍一疏忽，就会产生“越界”行为，时间愈长，维护隔离性的成本愈高。而到了微服务阶段，自带应用级别的隔离性，“越界”的成本大大提升，无需任何规范，架构本身就保证了隔离性。</p>
 <p>另一方面，由于采用了分布式架构，微服务无法再简单的通过数据库事务来保证强一致性，而是通过消息中间件或者某种事务补偿机制来保证最终一致性，比如微信朋友圈的点赞，淘宝订单的物流状态。其次，在微服务阶段，随着应用数量的激增，一次发布往往涉及多个应用，加上异构性带来的部署方式的多样性，对团队的运维水平尤其是自动化水平提出了更高的要求，运维和开发的边界进一步模糊。</p>
 <p><img src="http://martinfowler.com/bliki/images/microservicePrerequisites/sketch.png" alt=""></p>
-<h5 id="领域知识"><a href="#领域知识" class="headerlink" title="领域知识"></a>领域知识</h5><p>除了组织架构和技术取舍，领域知识是另一个非常重要的决策因素。对于不熟悉的业务领域，很难第一次就把各个微服务的边界和接口定义正确，一旦开始开发，重构成本就会非常可观。反过来说，当对领域知识有了一定的积累，再重构一个单体应用就会容易的多。</p>
-<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h5><p>综上所述，虽然微服务看上去很美，但在决定采用微服务架构之前，不仅要仔细考量团队的技术水平（包括知识结构，理论深度，经验积累和技术氛围），还应综合考虑项目的时间范围，领域知识的熟悉程度，以及所在组织的规模架构。除非这些前提条件都满足，否则单体应用是更适合的选择，就像Fowler<a href="http://martinfowler.com/bliki/MonolithFirst.html" target="_blank" rel="external">建议</a>的那样。</p>
+<h3 id="领域知识"><a href="#领域知识" class="headerlink" title="领域知识"></a>领域知识</h3><p>除了组织架构和技术取舍，领域知识是另一个非常重要的决策因素。对于不熟悉的业务领域，很难第一次就把各个微服务的边界和接口定义正确，一旦开始开发，重构成本就会非常可观。反过来说，当对领域知识有了一定的积累，再重构一个单体应用就会容易的多。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>综上所述，虽然微服务看上去很美，但在决定采用微服务架构之前，不仅要仔细考量团队的技术水平（包括知识结构，理论深度，经验积累和技术氛围），还应综合考虑项目的时间范围，领域知识的熟悉程度，以及所在组织的规模架构。除非这些前提条件都满足，否则单体应用是更适合的选择，就像Fowler<a href="http://martinfowler.com/bliki/MonolithFirst.html" target="_blank" rel="external">建议</a>的那样。</p>
 <p><img src="http://martinfowler.com/bliki/images/microservice-verdict/path.png" alt=""></p>
-<h4 id="3-微服务化总览"><a href="#3-微服务化总览" class="headerlink" title="3 微服务化总览"></a>3 微服务化总览</h4><p><img src="microservice.png" alt=""></p>
+<h2 id="3-微服务化总览"><a href="#3-微服务化总览" class="headerlink" title="3 微服务化总览"></a>3 微服务化总览</h2><p><img src="microservice.png" alt=""></p>
 <p>上图是XR微服务化第一阶段的整体架构图。可以看到，一些支撑微服务的必要组件都已包含其中：</p>
 <ul>
 <li>服务注册中心：所有服务注册到Consul集群，集成Nginx实现负载均衡，使用Hystrix实现简单的服务降级和熔断机制</li>
@@ -62,7 +125,7 @@
 <li>监控平台：利用Consul API获取服务状态，通过Zookeeper触发告警</li>
 </ul>
 <p>在微服务化系列的后续文章中，我会针对服务注册、配置中心、授权中心和服务监控分别展开介绍实施过程中的一些细节和经验。敬请期待。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
 <li><a href="http://martinfowler.com/microservices/" target="_blank" rel="external">Microservices Resource Guide</a></li>
 <li><a href="http://callistaenterprise.se/blogg/teknik/2015/03/25/an-operations-model-for-microservices/" target="_blank" rel="external">An operations model for Microservices</a></li>
 <li><a href="https://mp.weixin.qq.com/s?__biz=MzA5Nzc4OTA1Mw==&amp;mid=407641457&amp;idx=1&amp;sn=183d27056f3bd8ef17e77a3c15dfb3dd" target="_blank" rel="external">实施微服务，我们需要哪些基础框架？</a></li>
@@ -73,7 +136,883 @@
 </ul>
 ]]></content:encoded>
       
-      <comments>http://emacoo.cn/2016/11/13/microservice-overview/#disqus_thread</comments>
+      <comments>http://emacoo.cn/arch/microservice-overview/#disqus_thread</comments>
+    </item>
+    
+    <item>
+      <title>【Java进阶】利用APT优雅的实现统一日志格式</title>
+      <link>http://emacoo.cn/coding/java-apt-logging/</link>
+      <guid>http://emacoo.cn/coding/java-apt-logging/</guid>
+      <pubDate>Sat, 09 Jul 2016 16:00:00 GMT</pubDate>
+      <description>
+      
+        &lt;h2 id=&quot;统一日志格式的几种方式&quot;&gt;&lt;a href=&quot;#统一日志格式的几种方式&quot; class=&quot;headerlink&quot; title=&quot;统一日志格式的几种方式&quot;&gt;&lt;/a&gt;统一日志格式的几种方式&lt;/h2&gt;&lt;p&gt;无论是搭建日志平台还是进行大数据分析，统一日志格式都是一个重要的前提
+      
+      </description>
+      
+      <content:encoded><![CDATA[<h2 id="统一日志格式的几种方式"><a href="#统一日志格式的几种方式" class="headerlink" title="统一日志格式的几种方式"></a>统一日志格式的几种方式</h2><p>无论是搭建日志平台还是进行大数据分析，统一日志格式都是一个重要的前提条件。假设要统一成下面的日志格式，</p>
+<blockquote>
+<p>日志格式：[{系统}|{模块}]{描述}[param1=value1$param2=value2]，例如：[API|Weixin]Weixin send message failed. [senderId=1234$receiverId=5678]</p>
+</blockquote>
+<p>常见的方法有：</p>
+<ul>
+<li>方法1：每次记录日志时，根据上下文在原始的消息内容前后分别加上合适的[{系统}|{模块}]前缀和参数后缀。</li>
+<li>方法2：自定义日志类，将{系统}和{模块}作为构造函数的参数传入，并且在所提供的日志接口中自动格式化传入的参数数组。</li>
+<li>方法3：自定义注解类声明所属的{系统}和{模块}，然后通过AOP的方式，统一在日志中插入[{系统}|{模块}]前缀。</li>
+<li>方法4：在方法2的基础上，自定义注解类声明所属的{系统}和{模块}，然后通过APT自动生成自定义类型的log成员变量。</li>
+</ul>
+<p>方法1依赖于人工来保证统一的日志格式，方法3虽然简化了方法调用，但对性能有一定的影响。方法2是最常见的手段，但每个类都要显示声明log成员变量，略显冗余。方法4兼具方法2和方法3的优点，同时又避免了两者的不足，是一种优雅的实现方式，也是<a href="https://github.com/rzwitserloot/lombok" target="_blank" rel="external">lombok</a>所采用的方式。</p>
+<p>下面就针对方法4，结合示例代码介绍一下相关技术。</p>
+<h2 id="APT-编译期自动生成log成员变量"><a href="#APT-编译期自动生成log成员变量" class="headerlink" title="APT: 编译期自动生成log成员变量"></a>APT: 编译期自动生成log成员变量</h2><p><a href="http://docs.oracle.com/javase/6/docs/technotes/guides/apt/" target="_blank" rel="external">APT</a>的全称是Annotation Processing Tool，诞生于Java 6版本，主要用于在编译期根据不同的注解类生成或者修改代码。APT运行于独立的JVM进程中（编译之前），并且在一次编译过程中可能会被多次调用。</p>
+<p>首先，声明一个包含{系统}和{模块}定义的日志注解类。注意@Retention应设置为RetentionPolicy.SOURCE，表示编译后擦除该注解信息。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"> * 用于自动生成log成员变量.仅适用于class或enum,不适用于接口.</div><div class="line"> */</div><div class="line"><span class="meta">@Retention</span>(RetentionPolicy.SOURCE)</div><div class="line"><span class="meta">@Target</span>(ElementType.TYPE)</div><div class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Slf4j &#123;</div><div class="line"></div><div class="line">    <span class="comment">/**</span></div><div class="line">     * 系统名称.如果为空则取"-Dvlogging.system"系统属性,如果系统属性也为空,则取"Unknown".</div><div class="line">     */</div><div class="line">    <span class="function">String <span class="title">system</span><span class="params">()</span> <span class="keyword">default</span> ""</span>;</div><div class="line"></div><div class="line">    <span class="comment">/**</span></div><div class="line">     * 模块名称.如果为空则取"-Dvlogging.module"系统属性,如果系统属性也为空,则取"Unknown".</div><div class="line">     */</div><div class="line">    <span class="function">String <span class="title">module</span><span class="params">()</span> <span class="keyword">default</span> ""</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>然后，声明一个注解处理类，继承Java默认提供的AbstractProcessor类，其中：</p>
+<ul>
+<li>messager: 用于记录处理日志</li>
+<li>trees: 用于解析Java AST树</li>
+<li>maker: 用于生成Java AST节点</li>
+<li>names: 用于生成Java AST节点名称</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Slf4jProcessor</span> <span class="keyword">extends</span> <span class="title">AbstractProcessor</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(ProcessingEnvironment processingEnv)</span> </span>&#123;</div><div class="line">        <span class="keyword">super</span>.init(processingEnv);</div><div class="line">        messager = processingEnv.getMessager();</div><div class="line">        trees = Trees.instance(processingEnv);</div><div class="line">        Context context = ((JavacProcessingEnvironment) processingEnv).getContext();</div><div class="line">        maker = TreeMaker.instance(context);</div><div class="line">        names = Names.instance(context);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在process方法中调用Java Compiler API根据注解信息动态生成log日志成员变量：<br><br><code>private static final Logger log = LoggerFactory.getLogger(LoggerFactory.Type.SLF4J, annotatedClass.class, system, module);</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">process</span><span class="params">(Set&lt;? extends TypeElement&gt; annotations, RoundEnvironment roundEnv)</span> </span>&#123;</div><div class="line">    <span class="comment">// 1 检查类型</span></div><div class="line">    roundEnv.getElementsAnnotatedWith(Slf4j.class).stream().forEach(elm -&gt; &#123;</div><div class="line">        <span class="keyword">if</span> (elm.getKind() != ElementKind.CLASS &amp;&amp; elm.getKind() != ElementKind.ENUM) &#123;</div><div class="line">            messager.printMessage(Diagnostic.Kind.ERROR, <span class="string">"Only classes or enums can be annotated with "</span> + Slf4j.class.getSimpleName());</div><div class="line">            <span class="keyword">return</span>;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="comment">// 2 检查log成员变量是否已存在</span></div><div class="line">        TypeElement typeElm = (TypeElement) elm;</div><div class="line">        <span class="keyword">if</span> (typeElm.getEnclosedElements().stream()</div><div class="line">                .filter(e -&gt; e.getKind() == ElementKind.FIELD &amp;&amp; Logger.FIELD_NAME.equals(e.getSimpleName())).count() &gt; <span class="number">0</span>) &#123;</div><div class="line">            messager.printMessage(Diagnostic.Kind.WARNING, MessageFormat.format(<span class="string">"A member field named &#123;0&#125; already exists in the annotated class"</span>, Logger.FIELD_NAME));</div><div class="line">            <span class="keyword">return</span>;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="comment">// 3 注入log成员变量</span></div><div class="line">        CompilationUnitTree cuTree = trees.getPath(typeElm).getCompilationUnit();</div><div class="line">        <span class="keyword">if</span> (cuTree <span class="keyword">instanceof</span> JCTree.JCCompilationUnit) &#123;</div><div class="line">            JCTree.JCCompilationUnit cu = (JCTree.JCCompilationUnit) cuTree;</div><div class="line">            <span class="comment">// only process on files which have been compiled from source</span></div><div class="line">            <span class="keyword">if</span> (cu.sourcefile.getKind() == JavaFileObject.Kind.SOURCE) &#123;</div><div class="line">                _findType(cu, typeElm.getQualifiedName().toString()).ifPresent(type -&gt; &#123;</div><div class="line">                    Slf4j slf4j = typeElm.getAnnotation(Slf4j.class);</div><div class="line">                    String system = slf4j.system();</div><div class="line">                    String <span class="keyword">module</span> = slf4j.<span class="keyword">module</span>();</div><div class="line"></div><div class="line">                    <span class="comment">// 生成private static final Logger log = LoggerFactory.getLogger(LoggerFactory.Type.SLF4J, &lt;annotatedClass&gt;, &lt;system&gt;, &lt;module&gt;);</span></div><div class="line">                    JCTree.JCExpression loggerType = _toExpression(Logger.class.getCanonicalName());</div><div class="line">                    JCTree.JCExpression getLoggerMethod = _toExpression(LoggerFactory.class.getCanonicalName() + <span class="string">".getLogger"</span>);</div><div class="line">                    JCTree.JCExpression typeArg = _toExpression(LoggerFactory.Type.class.getCanonicalName() + <span class="string">"."</span> + LoggerFactory.Type.SLF4J.name());</div><div class="line">                    JCTree.JCExpression nameArg = _toExpression(typeElm.getQualifiedName() + <span class="string">".class"</span>);</div><div class="line">                    JCTree.JCExpression systemArg = maker.Literal(system);</div><div class="line">                    JCTree.JCExpression moduleArg = maker.Literal(<span class="keyword">module</span>);</div><div class="line">                    JCTree.JCMethodInvocation getLoggerCall = maker.Apply(List.nil(), getLoggerMethod, List.of(typeArg, nameArg, systemArg, moduleArg));</div><div class="line">                    JCTree.JCVariableDecl logField = maker.VarDef(</div><div class="line">                            maker.Modifiers(Flags.PRIVATE | Flags.STATIC | Flags.FINAL),</div><div class="line">                            names.fromString(Logger.FIELD_NAME), loggerType, getLoggerCall);</div><div class="line"></div><div class="line">                    _insertField(type, logField);</div><div class="line">                &#125;);</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;);</div><div class="line"></div><div class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="集成示例"><a href="#集成示例" class="headerlink" title="集成示例"></a>集成示例</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Slf</span>4j(system = <span class="string">"Vlogging"</span>, <span class="keyword">module</span> = <span class="string">"Integration"</span>)</div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">VloggingAnnotated</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">        HashMap&lt;String, String&gt; params = <span class="keyword">new</span> HashMap&lt;&gt;();</div><div class="line">        params.put(<span class="string">"foo"</span>, <span class="string">"xyz"</span>);</div><div class="line">        log.info(VloggingAnnotated.class.getCanonicalName(), params);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>由此可见，使用方法4，业务类只要加上自定义注解，然后正常调用日志API，就可以以统一的日志格式记录日志。</p>
+<h3 id="输出示例"><a href="#输出示例" class="headerlink" title="输出示例"></a>输出示例</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">2016-07-10 17:26:45 +0800 [INFO] from VloggingAnnotated in main - [Vlogging|Integration]com.xingren.v.logging.integration.VloggingAnnotated[foo=xyz]</div></pre></td></tr></table></figure>
+<h2 id="IntelliJ-Plugin-自动生成PSI-Element，消除编译错误"><a href="#IntelliJ-Plugin-自动生成PSI-Element，消除编译错误" class="headerlink" title="IntelliJ Plugin: 自动生成PSI Element，消除编译错误"></a>IntelliJ Plugin: 自动生成PSI Element，消除编译错误</h2><p>至此，在命令行方式下，方法4已经可以正确运行。但在IDE环境中（比如IntelliJ，Eclipse），由于一般它们都会使用自定义的编译模型，需要额外实现一个插件来根据注解信息动态修改IDE的语法树，以避免编译错误。对于IntelliJ而言，使用的是<a href="http://www.jetbrains.org/intellij/sdk/docs/basics/architectural_overview/psi_elements.html" target="_blank" rel="external">PSI模型</a>，相应的插件代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 继承com.intellij.psi.augment.PsiAugmentProvider类</span></div><div class="line"></div><div class="line"><span class="meta">@NotNull</span></div><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="keyword">public</span> &lt;Psi extends PsiElement&gt; <span class="function">List&lt;Psi&gt; <span class="title">getAugments</span><span class="params">(@NotNull PsiElement psiElement, @NotNull Class&lt;Psi&gt; type)</span> </span>&#123;</div><div class="line">    <span class="keyword">final</span> List&lt;Psi&gt; emptyResult = Collections.emptyList();</div><div class="line">    <span class="comment">// skip processing during index rebuild</span></div><div class="line">    <span class="keyword">final</span> Project project = psiElement.getProject();</div><div class="line">    <span class="keyword">if</span> (DumbService.isDumb(project)) &#123;</div><div class="line">        <span class="keyword">return</span> emptyResult;</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// Expecting that we are only augmenting an PsiClass</span></div><div class="line">    <span class="comment">// Don't filter !isPhysical elements or code auto completion will not work</span></div><div class="line">    <span class="keyword">if</span> (!(psiElement <span class="keyword">instanceof</span> PsiExtensibleClass) || !psiElement.isValid()) &#123;</div><div class="line">        <span class="keyword">return</span> emptyResult;</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// filter non-field type</span></div><div class="line">    <span class="keyword">if</span> (!PsiField.class.isAssignableFrom(type)) &#123;</div><div class="line">        <span class="keyword">return</span> emptyResult;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">final</span> PsiClass psiClass = (PsiClass) psiElement;</div><div class="line">    <span class="comment">// see AbstractClassProcessor#process()</span></div><div class="line">    PsiAnnotation psiAnnotation = PsiAnnotationUtil.findAnnotation(psiClass, Slf4j.class);</div><div class="line">    <span class="keyword">if</span> (<span class="keyword">null</span> == psiAnnotation) &#123;</div><div class="line">        <span class="keyword">return</span> emptyResult;</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// check cache first</span></div><div class="line">    <span class="keyword">if</span> (loggerCache.containsKey(psiClass.getQualifiedName())) &#123;</div><div class="line">        <span class="keyword">return</span> Arrays.asList((Psi) loggerCache.get(psiClass.getQualifiedName()));</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">final</span> PsiManager manager = psiClass.getContainingFile().getManager();</div><div class="line">    <span class="keyword">final</span> PsiElementFactory psiElementFactory = JavaPsiFacade.getElementFactory(project);</div><div class="line">    PsiType psiLoggerType = psiElementFactory.createTypeFromText(LOGGER_TYPE, psiClass);</div><div class="line">    LightFieldBuilder loggerField = <span class="keyword">new</span> LightFieldBuilder(manager, LOGGER_NAME, psiLoggerType);</div><div class="line">    LightModifierList modifierList = (LightModifierList) loggerField.getModifierList();</div><div class="line">    modifierList.addModifier(PsiModifier.PRIVATE);</div><div class="line">    modifierList.addModifier(PsiModifier.STATIC);</div><div class="line">    modifierList.addModifier(PsiModifier.FINAL);</div><div class="line">    loggerField.setContainingClass(psiClass);</div><div class="line">    loggerField.setNavigationElement(psiAnnotation);</div><div class="line"></div><div class="line">    <span class="keyword">final</span> String loggerInitializerParameter = String.format(LOGGER_CATEGORY, psiClass.getName());</div><div class="line">    <span class="keyword">final</span> PsiExpression initializer = psiElementFactory.createExpressionFromText(String.format(LOGGER_INITIALIZER, loggerInitializerParameter), psiClass);</div><div class="line">    loggerField.setInitializer(initializer);</div><div class="line">    <span class="comment">// add to cache</span></div><div class="line">    loggerCache.put(psiClass.getQualifiedName(), loggerField);</div><div class="line"></div><div class="line">    <span class="keyword">return</span> Arrays.asList((Psi) loggerField);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="https://github.com/rzwitserloot/lombok" target="_blank" rel="external">GitHub: lombok</a></li>
+<li><a href="https://github.com/mplushnikov/lombok-intellij-plugin" target="_blank" rel="external">GitHub: lombok-intellij-plugin</a></li>
+<li><a href="http://hannesdorfmann.com/annotation-processing/annotationprocessing101" target="_blank" rel="external">ANNOTATION PROCESSING 101</a></li>
+<li><a href="https://www.javacodegeeks.com/2015/09/java-compiler-api.html" target="_blank" rel="external">Java Compiler API</a></li>
+<li><a href="http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started.html" target="_blank" rel="external">Creating Your First Plugin</a></li>
+</ul>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/coding/java-apt-logging/#disqus_thread</comments>
+    </item>
+    
+    <item>
+      <title>【CI/CD】几种常见的不停机发布方式</title>
+      <link>http://emacoo.cn/devops/ci-cd-hot-deployment/</link>
+      <guid>http://emacoo.cn/devops/ci-cd-hot-deployment/</guid>
+      <pubDate>Wed, 08 Jun 2016 16:00:00 GMT</pubDate>
+      <description>
+      
+        &lt;h2 id=&quot;何为不停机发布？&quot;&gt;&lt;a href=&quot;#何为不停机发布？&quot; class=&quot;headerlink&quot; title=&quot;何为不停机发布？&quot;&gt;&lt;/a&gt;何为不停机发布？&lt;/h2&gt;&lt;p&gt;本文所说的不停机发布，是指在&lt;strong&gt;不停止对外服务&lt;/strong&gt;的前提下完成应用
+      
+      </description>
+      
+      <content:encoded><![CDATA[<h2 id="何为不停机发布？"><a href="#何为不停机发布？" class="headerlink" title="何为不停机发布？"></a>何为不停机发布？</h2><p>本文所说的不停机发布，是指在<strong>不停止对外服务</strong>的前提下完成应用的更新。与<a href="http://emacoo.cn/blog/play-hotdeploy">热部署</a>的区别在于，热部署关注于<strong>应用</strong>层面并且以<strong>不重启应用</strong>为前提，而不停机发布则关注于<strong>服务</strong>层面。随着摩尔定律逐渐逼近极限和多核时代的到来，分布式应用已经成为事实上的主流。下文首先给出一种通用的适用于分布式应用环境的不停机发布方式，然后再介绍Master/Worker这种常见的适用于单机应用的不停机发布方式。</p>
+<h2 id="Cluster模式"><a href="#Cluster模式" class="headerlink" title="Cluster模式"></a>Cluster模式</h2><p>对于运行于集群环境的分布式应用，一般在应用之上都有一层负载均衡（LB）。如果在发布过程中，在更新任一节点（也可以是一组节点）前先关闭该节点对应的负载，更新完再打开负载，即可实现整体服务的不停机发布。在此基础上，为了保证服务的稳定性，可以加上备机的支持，即更新某一节点时，先挂上备机，更新完再卸下，依次轮换更新完所有节点后最后再升级备机，如下图所示：</p>
+<p><img src="http://static.zybuluo.com/emac/zijlzk2pruasmrbmbaz8eev1/QQ20160405-3.png" alt=""></p>
+<p><em>* 完整设计可以参考我写的另一篇<a href="https://www.zybuluo.com/emac/note/330205" target="_blank" rel="external">文章</a></em></p>
+<p>上述发布过程其实就是一个简单的CD（Continuous Deployment）系统。作为一个参考实现，可以使用<a href="http://emacoo.cn/blog/jenkins-2-0-from-ci-to-cd">Jenkins 2.0 Pipeline</a>特性定义整个发布流程，使用<a href="https://github.com/cubicdaiya/ngx_dynamic_upstream" target="_blank" rel="external">Nginx Dynamic Upstream</a>插件操纵Nginx，然后配合脚本完成应用的启停和检测。</p>
+<p><img src="QQ20160609-0.png" alt=""></p>
+<h2 id="Master-Worker模式"><a href="#Master-Worker模式" class="headerlink" title="Master/Worker模式"></a>Master/Worker模式</h2><p>对于单机应用，由于不存在LB，一般由应用容器实现不停机发布特性，最常见是Master/Worker模式。容器中常驻一个master进程和多个work进程，master进程只负责加载程序和分发请求，由fork出来的worker进程完成具体工作。当容器收到更新应用的信号时，master进程重新加载更新后的程序，然后fork新的worker进程处理新的请求，而老的worker进程在处理完当前请求后就自动销毁。Ruby的<a href="https://github.com/blog/517-unicorn" target="_blank" rel="external">Unicorn</a>，PHP的<a href="http://php-fpm.org/about/" target="_blank" rel="external">FPM</a>都是采用了这套机制。</p>
+<h2 id="延伸阅读"><a href="#延伸阅读" class="headerlink" title="延伸阅读"></a>延伸阅读</h2><p>不同于Master/Worker模式，erlang采用了另一种独特的方式实现了不停机发布。</p>
+<blockquote>
+<p>erlang VM为每个模块最多保存2份代码，当前版本’current’和旧版本’old’，当模块第一次被加载时，代码就是’current’版本。如果有新的代码被加载，’current’版本代码就变成了’old’版本，新的代码就成了’current’版本。erlang用两个版本共存的方法来保证任何时候总有一个版本可用，对外服务就不会停止。<br><br><br>—— 引自<a href="http://blog.csdn.net/mycwq/article/details/43372687" target="_blank" rel="external">分析erlang热更新实现机制</a></p>
+</blockquote>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>不管是LB，还是Master/Worker，其基本思想都是在发布过程中，通过某种机制使得服务请求始终能够被系统的某个节点或者某个进程处理，从而保证了服务的可用性。</p>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/devops/ci-cd-hot-deployment/#disqus_thread</comments>
+    </item>
+    
+    <item>
+      <title>【Jenkins】Pipeline使用进阶</title>
+      <link>http://emacoo.cn/devops/jenkins-pipeline-tips/</link>
+      <guid>http://emacoo.cn/devops/jenkins-pipeline-tips/</guid>
+      <pubDate>Sat, 21 May 2016 16:00:00 GMT</pubDate>
+      <description>
+      
+        &lt;h2 id=&quot;无所不能，无所不及的Pipeline&quot;&gt;&lt;a href=&quot;#无所不能，无所不及的Pipeline&quot; class=&quot;headerlink&quot; title=&quot;无所不能，无所不及的Pipeline&quot;&gt;&lt;/a&gt;无所不能，无所不及的Pipeline&lt;/h2&gt;&lt;p&gt;得益于Jen
+      
+      </description>
+      
+      <content:encoded><![CDATA[<h2 id="无所不能，无所不及的Pipeline"><a href="#无所不能，无所不及的Pipeline" class="headerlink" title="无所不能，无所不及的Pipeline"></a>无所不能，无所不及的Pipeline</h2><p>得益于Jenkins内嵌的Groovy支持，加上<a href="https://jenkins.io/doc/pipeline/steps/" target="_blank" rel="external">丰富的Step库</a>，通过编写自定义Pipeline脚本你几乎可以实现任何复杂的构建、发布流程。下面简单谈谈使用Pipeline的四个段位。</p>
+<h2 id="I-启蒙老师：Snipper-Generator"><a href="#I-启蒙老师：Snipper-Generator" class="headerlink" title="I. 启蒙老师：Snipper Generator"></a>I. 启蒙老师：Snipper Generator</h2><p>Jenkins晦涩的行文风格并没有随着2.0的发布有所改善，Step库的<a href="https://jenkins.io/doc/pipeline/steps/" target="_blank" rel="external">官方参考手册</a>成功的延续了Jenkins一贯的惜字如金风格，大多数Step都只有一句话的描述和一些参数类型，罕有使用样例，比如<a href="https://jenkins.io/doc/pipeline/steps/workflow-scm-step/#git-git" target="_blank" rel="external">Git Step</a>。要理解这些Step，基本靠脑补。好在Jenkins提供了一款良心产品，<a href="https://jenkins.io/doc/pipeline/#using-snippet-generator" target="_blank" rel="external">Snipper Generator</a>，帮助使用者在Pipeline配置界面3步生成正确的调用语句。</p>
+<p><img src="QQ20160522-0.png" alt=""></p>
+<h2 id="II-调试利器：Replay-Pipeline"><a href="#II-调试利器：Replay-Pipeline" class="headerlink" title="II. 调试利器：Replay Pipeline"></a>II. 调试利器：Replay Pipeline</h2><p>维护过CI的同学一定知道，在成功创建一个正确、稳定运行的CI任务之前，往往需要历经多次调试和优化，创建Pipeline更是如此。为了避免重复打开配置界面调整Pipeline脚本，Jenkins贴心的提供了<a href="https://jenkins.io/blog/2016/04/14/replay-with-pipeline/" target="_blank" rel="external">Replay</a>功能。打开任意一次执行历史，在左侧点击Replay按钮，即可复原该次执行所运行的Pipeline脚本，无论脚本来源是任务本身还是远程仓库。</p>
+<p><img src="QQ20160522-1.png" alt=""></p>
+<h2 id="III-隐藏秘籍：Workflow-Global-Library"><a href="#III-隐藏秘籍：Workflow-Global-Library" class="headerlink" title="III. 隐藏秘籍：Workflow Global Library"></a>III. 隐藏秘籍：Workflow Global Library</h2><p>很多人不知道，Jenkins默认会启动一个SSHD服务，用于在<a href="https://wiki.jenkins-ci.org/display/JENKINS/Jenkins+CLI" target="_blank" rel="external">CLI</a>方式下执行一些Jenkins命令。Jenkins 2.0在此基础上，绑定了一个本地Git库（Workflow Global Library，简称WGL），用于上传一些全局共享的Groovy脚本，供同一Jenkins实例下所有Pipeline脚本调用。具体使用步骤如下：</p>
+<ol>
+<li><p>进入系统配置界面，找到SSH Server配置项，指定一个固定的SSH端口。<br><img src="QQ20160522-2.png" alt=""></p>
+</li>
+<li><p>进入当前用户的配置页面，绑定SSH Public Key。<br><img src="QQ20160522-3.png" alt=""></p>
+</li>
+<li><p>打开命令行，运行<code>git clone ssh://&lt;user&gt;@&lt;host&gt;:&lt;port&gt;/workflowLibs.git</code>拉取WGL。</p>
+</li>
+<li>在Git库的根目录下创建vars目录，编写Groovy脚本并存放于此，提交代码并Push至远程库。</li>
+</ol>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// hello.groovy，一个简单的示例Groovy脚本，定义了一个名为hello的全局方法</span></div><div class="line"><span class="keyword">def</span> call(name) &#123;</div><div class="line">    echo <span class="string">"Hello, $&#123;name&#125;!"</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="IV-如来神掌：Jenkins-Plugin"><a href="#IV-如来神掌：Jenkins-Plugin" class="headerlink" title="IV. 如来神掌：Jenkins Plugin"></a>IV. 如来神掌：Jenkins Plugin</h2><p>如果你需要同时维护多个Jenkins实例，那么WGL就不再适用了，因为每一个Jenkins实例你都需要上传一份脚本。这时就要祭出Jenkins Plugin大法，也即将共享的Groovy脚本封装到一个自定义Jenkins Plugin中，然后安装到需要的Jenkins实例中，以后也可以进行统一升级，有效降低了维护成本。要实现这一点，除了<a href="https://wiki.jenkins-ci.org/display/JENKINS/Extend+Jenkins" target="_blank" rel="external">传统的定义Jenkins Plugin的方法</a>，Jenkins<a href="https://jenkins.io/blog/2016/04/21/dsl-plugins/" target="_blank" rel="external">官方博客</a>还提供了另一种更为简便的封装方式，具体可以参考我的这个GitHub项目，<a href="https://github.com/emac/demo-pipeline-step" target="_blank" rel="external">demo-pipeline-step</a>。</p>
+<h2 id="延伸阅读"><a href="#延伸阅读" class="headerlink" title="延伸阅读"></a>延伸阅读</h2><p>利用强大、灵活的Pipeline，我们可以像组装乐高玩具一般操纵Jenkins，根据实际情况构建所需的CI/CD流程。近期我设计的<a href="https://zybuluo.com/emac/note/330205" target="_blank" rel="external">Frigate</a>发布系统正式利用Jenkins Pipeline无缝衔接各个发布环节。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="https://jenkins.io/blog/2016/04/14/replay-with-pipeline/" target="_blank" rel="external">Replay a Pipeline with script edits</a></li>
+<li><a href="https://jenkins.io/blog/2016/04/21/dsl-plugins/" target="_blank" rel="external">Making your own DSL with plugins, written in Pipeline script</a></li>
+</ul>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/devops/jenkins-pipeline-tips/#disqus_thread</comments>
+    </item>
+    
+    <item>
+      <title>【Jenkins】2.0新时代：从CI到CD</title>
+      <link>http://emacoo.cn/devops/jenkins-2-0-from-ci-to-cd/</link>
+      <guid>http://emacoo.cn/devops/jenkins-2-0-from-ci-to-cd/</guid>
+      <pubDate>Sat, 30 Apr 2016 16:00:00 GMT</pubDate>
+      <description>
+      
+        &lt;h2 id=&quot;2-0-破茧重生&quot;&gt;&lt;a href=&quot;#2-0-破茧重生&quot; class=&quot;headerlink&quot; title=&quot;2.0 破茧重生&quot;&gt;&lt;/a&gt;2.0 破茧重生&lt;/h2&gt;&lt;p&gt;自从去年9月底Jenkins的创始人&lt;a href=&quot;https://github.com/
+      
+      </description>
+      
+      <content:encoded><![CDATA[<h2 id="2-0-破茧重生"><a href="#2-0-破茧重生" class="headerlink" title="2.0 破茧重生"></a>2.0 破茧重生</h2><p>自从去年9月底Jenkins的创始人<a href="https://github.com/kohsuke" target="_blank" rel="external">Kohsuke Kawaguchi</a>提出Jenkins 2.0（后称2.0）的<a href="https://docs.google.com/presentation/d/12ikbbQoMvus_l_q23BxXhYXnW9S5zsVNwIKZ9N8udg4/edit#slide=id.p" target="_blank" rel="external">愿景</a>和<a href="https://groups.google.com/forum/#!topic/jenkinsci-dev/vbXK7JJekFw/overview" target="_blank" rel="external">草案</a>之后，整个Jenkins社区为之欢欣鼓舞，不管是官方博客还是Google论坛，大家都在热烈讨论和期盼2.0的到来。4月20日，历经Alpha(2/29)，Beta(3/24)，RC(4/7)3个版本的迭代，2.0终于正式发布。这也是Jenkins面世11年以来（算上前身Hudson）的首次大版本升级。那么，这次升级具体包含了哪些内容呢？</p>
+<h3 id="外部"><a href="#外部" class="headerlink" title="外部"></a>外部</h3><p>从外部来看，2.0最大的三个卖点分别是Pipeline as Code，全新的开箱体验和1.x兼容性。</p>
+<p><strong>Pipeline as Code</strong>是2.0的精髓所在，是帮助Jenkins实现CI(Continuous Integration)到CD(Continuous Delivery)华丽转身的关键推手。所谓Pipeline，简单来说，就是一套运行于Jenkins上的工作流框架，将原本独立运行于单个或者多个节点的任务连接起来，实现单个任务难以完成的复杂发布流程（例如下图）。Pipeline的实现方式是一套Groovy DSL(类似Gradle)，任何发布流程都可以表述为一段Groovy脚本，并且Jenkins支持从代码库直接读取脚本，从而实现了Pipeline as Code的理念。</p>
+<p><img src="https://jenkins.io/images/pipeline/realworld-pipeline-flow.png" alt=""></p>
+<p><strong>全新的开箱体验</strong>力图扭转我们印象中Jenkins十年不变的呆滞界面风格，不光Jenkins应用本身，官网排版、博客样式乃至域名都被重新设计。这些变化除了极大的改善了用户体验，更重要的是给人们传达一个清晰的信号，Jenkins不再仅仅是一个CI工具，而是蕴含着无限可能。</p>
+<p><img src="https://jenkins.io/images/2.0-create-item.png" alt=""></p>
+<p><img src="https://jenkins.io/images/2.0-config-dialog.png" alt=""></p>
+<p><strong>1.x兼容性</strong>给所有老版本用户吃了一颗大大的定心丸，注意，是完全兼容哦。</p>
+<h3 id="内部"><a href="#内部" class="headerlink" title="内部"></a>内部</h3><p>从内部来看，2.0主要包含了一些组件升级和JS模块化改造。</p>
+<ul>
+<li>升级Servlet版本到3.1，获取Web Sockets支持</li>
+<li>升级内嵌的Groovy版本到2.4.6<ul>
+<li>未来版本的Jenkins将会<a href="https://issues.jenkins-ci.org/browse/JENKINS-29068" target="_blank" rel="external">把Groovy彻底从内核中剥离</a>，此次Groovy升级只是第一步</li>
+</ul>
+</li>
+<li>提供一个简化的JS类库给Plugin开发者使用</li>
+</ul>
+<h3 id="更好的容器化支持"><a href="#更好的容器化支持" class="headerlink" title="更好的容器化支持"></a>更好的容器化支持</h3><p>随着容器化技术（以Docker为代表）的不断升温，Jenkins紧随潮流，不仅同步上传2.0的Docker镜像，同时也在Pipeline中提供了默认的<a href="https://jenkins.io/doc/pipeline/steps/docker-workflow/" target="_blank" rel="external">Docker支持</a>。</p>
+<p>除了上述内容，2.0还有一个比较有意思的改动，全局重命名Slave为Agent，看来在美国做IT政治正确性也是很重要啊。</p>
+<h2 id="Pipeline-as-Code"><a href="#Pipeline-as-Code" class="headerlink" title="Pipeline as Code"></a>Pipeline as Code</h2><p>了解了2.0的概貌之后，回过来我们再看一下Pipeline as Code(后称Pipeline)产生的背景和具体构成。</p>
+<h3 id="产生背景"><a href="#产生背景" class="headerlink" title="产生背景"></a>产生背景</h3><p>作为2.0的核心插件，Pipeline并不是一个新事物，它的前身是<a href="https://wiki.jenkins-ci.org/display/JENKINS/Workflow+Plugin" target="_blank" rel="external">Workflow Plugin</a>，而Workflow的诞生是受更早的<a href="https://wiki.jenkins-ci.org/display/JENKINS/Build+Flow+Plugin" target="_blank" rel="external">Build Flow Plugin</a>启发，由<a href="https://github.com/ndeloof" target="_blank" rel="external">Nicolas De Loof</a>于2012年4月发布第一个版本。而纵观Jenkins的几个竞争对手（<a href="https://docs.travis-ci.com/user/customizing-the-build/" target="_blank" rel="external">Travis CI</a>、<a href="https://www.phptesting.org/wiki/Adding-PHPCI-Support-to-Your-Projects" target="_blank" rel="external">phpci</a>、<a href="https://circleci.com/docs/configuration/" target="_blank" rel="external">circleci</a>），Pipeline早已不是什么新鲜概念。可以说这次Jenkins 2.0的发布是顺势而为，同时也是大势所趋。</p>
+<p>如果要在更大范围探讨Pipelined的产生背景，我认为有三个层面的原因。</p>
+<ul>
+<li>第一层面，与不断增长的发布复杂度有关，其中一个典型场景就是灰度发布。原本只有大公司才有的灰度发布，随着敏捷开发实践的广泛采用、产品迭代周期的不断缩短、数据增长理念的深入人心，越来越多的中小公司也开始这一方面的探索，这对发布的需求也从点状的CI升级到线状的CD。这是Pipeline产生的第一个原因。</li>
+<li>第二层面，与应用架构的模块化演变有关，以<a href="http://martinfowler.com/articles/microservices.html" target="_blank" rel="external">微服务</a>为代表，一次应用升级往往涉及到多个模块的协同发布，单个CI显然无法满足此类需求。这是Pipeline产生的第二个原因。</li>
+<li>第三层面，与日益失控的CI数量有关。一方面，类似于Maven、pip、RubyGems这样的包管理工具使得有CI需求的应用呈爆发性增长，另一方面，受益于便捷的Git分支特性，即便对于同一个应用，往往也需要配置多个CI。随着CI数量的不断增长，集中式的任务配置就会成为一个瓶颈，这就需要把任务配置的职责下放到应用团队。这是Pipeline(as Code)产生的第三个原因。</li>
+</ul>
+<h3 id="具体构成"><a href="#具体构成" class="headerlink" title="具体构成"></a>具体构成</h3><p>说完背景，再看一下Pipeline的具体构成和特性。</p>
+<p>基本概念：</p>
+<ul>
+<li>Stage: 一个Pipeline可以划分为若干个Stage，每个Stage代表一组操作。注意，Stage是一个逻辑分组的概念，可以跨多个Node。</li>
+<li>Node: 一个Node就是一个Jenkins节点，或者是Master，或者是Agent，是执行Step的具体运行期环境。</li>
+<li>Step: Step是最基本的操作单元，小到创建一个目录，大到构建一个Docker镜像，由各类Jenkins Plugin提供。</li>
+</ul>
+<p>具体构成：</p>
+<ul>
+<li>Jenkinsfile: Pipeline的定义文件，由Stage，Node，Step组成，一般存放于代码库根目录下。</li>
+<li>Stage View: Pipeline的视觉展现，类似于下图。</li>
+</ul>
+<p><img src="QQ20160502-0.png" alt=""></p>
+<p>2.0默认支持三种类型的Pipeline，普通Pipeline，Multibranch Pipeline和Organization Folders，后两种其实是批量创建一组普通Pipeline的快捷方式，分别对应于多分支的应用和多应用的大型组织。注意，要获取Organization Folders的支持需要额外安装Plugin。</p>
+<p>值得一提的是，2.0有两个很重要的特性：</p>
+<ul>
+<li>Pausable: 类似于Bash的read命令，2.0允许暂停发布流程，等待人工确认后再继续，这个特性对于保证应用HA尤为重要。</li>
+</ul>
+<p><img src="QQ20160502-1.png" alt=""></p>
+<ul>
+<li>Durable: 发布过程中，如果Jenkins挂掉，正在运行中的Pipeline并不会受影响，也就是说Pipeline的进程独立于Jenkins进程本身。</li>
+</ul>
+<h3 id="示例Pipeline"><a href="#示例Pipeline" class="headerlink" title="示例Pipeline"></a>示例Pipeline</h3><p>上文所涉及的示例Pipeline可以在我的<a href="(https://github.com/emac/pagination/blob/master/Jenkinsfile">GitHub</a>)找到，如果有问题想跟我探讨，可以加我QQ: 7789059。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="https://jenkins.io/blog/2016/04/15/the-need-for-pipeline/?utm_source=feedburner&amp;utm_medium=feed&amp;utm_campaign=Feed%3A+ContinuousBlog+%28Jenkins%29" target="_blank" rel="external">The Need for Jenkins Pipeline</a></li>
+<li><a href="https://wiki.jenkins-ci.org/display/JENKINS/Jenkins+2.0" target="_blank" rel="external">Jenkins 2.0</a></li>
+<li><a href="https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md" target="_blank" rel="external">Why Pipeline?</a></li>
+<li><a href="https://jenkins.io/blog/2015/12/03/pipeline-as-code-with-multibranch-workflows-in-jenkins/" target="_blank" rel="external">Pipeline-as-code with Multibranch Workflows in Jenkins</a></li>
+</ul>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/devops/jenkins-2-0-from-ci-to-cd/#disqus_thread</comments>
+    </item>
+    
+    <item>
+      <title>【Spring】基于Spring Data JPA的分页组件</title>
+      <link>http://emacoo.cn/backend/spring-data-jpa-pagination/</link>
+      <guid>http://emacoo.cn/backend/spring-data-jpa-pagination/</guid>
+      <pubDate>Sat, 09 Apr 2016 16:00:00 GMT</pubDate>
+      <description>
+      
+        &lt;h2 id=&quot;分页的基本模型&quot;&gt;&lt;a href=&quot;#分页的基本模型&quot; class=&quot;headerlink&quot; title=&quot;分页的基本模型&quot;&gt;&lt;/a&gt;分页的基本模型&lt;/h2&gt;&lt;p&gt;做Web应用开发，或早或晚都会涉及到分页。按模型划分，分页包含页码（page），大小（size）和总
+      
+      </description>
+      
+      <content:encoded><![CDATA[<h2 id="分页的基本模型"><a href="#分页的基本模型" class="headerlink" title="分页的基本模型"></a>分页的基本模型</h2><p>做Web应用开发，或早或晚都会涉及到分页。按模型划分，分页包含页码（page），大小（size）和总条数（count），页码和大小面向的是前端页面，而总条数来自后端服务。按表现形式，可分为显式分页和隐式分页（比如上拉加载），显示分页一般用于PC端，而隐式分页一般用于Mobile端。按实现方式，或者由前端JS生成，或者是后端模板。</p>
+<h2 id="分页的基本原理"><a href="#分页的基本原理" class="headerlink" title="分页的基本原理"></a>分页的基本原理</h2><p>一般而言，分页最终都是映射到数据库查询，在此场景下，不论何种分页框架，其基本原理都是基于SQL的<code>LIMIT [offset,] row_count</code>语法（数据库不同语法略有差别）。row_count对应的是size，而offset则是通过page*size计算得到（假设page从0计数），比如(page=1, size=10)对应(offset=10, row_count=10)。</p>
+<p>介绍了分页的基本模型和原理后，接下来我结合一个基于Spring Data JPA的分页组件，阐述分页的一些实现要点。</p>
+<h2 id="分页的实现要点"><a href="#分页的实现要点" class="headerlink" title="分页的实现要点"></a>分页的实现要点</h2><p>首先看一个典型的分页效果：</p>
+<p><img src="pagination.png" alt="pagination"></p>
+<p>整个分页组件由三部分组成，首页|上一页，下一页|末页，以及中间的页码组。显然，前两部分是固定的，而页码组是随着当前页码的变化而变化。其实现要点有三个，</p>
+<ul>
+<li>计算页码组：首先比较页码组默认长度和总页数，取较小值为页码组最终长度（L）。然后根据当前页码（P）和总页数（T）的关系，再细分为三种情况<ul>
+<li>P+L/2&lt;=L: 页码组从1开始计数，比如(P=2, T=6, L=5) -&gt; 1,2,3,4,5</li>
+<li>P+L&gt;=T: 页码组从T倒数L开始计数，比如(P=5, T=6, L=5) -&gt; 2,3,4,5,6</li>
+<li>其他: 页码组从P-L/2+1开始计数，比如(P=4, T=6, L=5) -&gt; 2,3,4,5,6</li>
+</ul>
+</li>
+<li>按钮状态：首页，上一页，下一页，末页对应按钮的启用状态应随当前页码的值变化而变化，并且当前页码对应的按钮应该始终处于禁用状态。</li>
+<li>页码显示：页面显示是从1开始，而数据库查询是从0开始。这一点不想清楚，边界情况就处理不好。</li>
+</ul>
+<p>具体实现细节，可参考我GitHub的一个示例项目，<a href="https://github.com/emac/pagination" target="_blank" rel="external">Pagination</a>。</p>
+<h2 id="Spring-Data-JPA简介"><a href="#Spring-Data-JPA简介" class="headerlink" title="Spring Data JPA简介"></a>Spring Data JPA简介</h2><p><a href="http://projects.spring.io/spring-data-jpa/" target="_blank" rel="external">Spring Data JPA</a>隶属于<a href="http://projects.spring.io/spring-data/" target="_blank" rel="external">Spring Data</a>项目，通过一系列Spring风格的接口和注解，极大的简化了创建和开发JPA Repository的过程，同时提供了自定义查询，分页排序等高级特性的支持。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="http://docs.spring.io/spring-data/commons/docs/current/reference/html/" target="_blank" rel="external">Spring Data Commons - Reference Documentation</a></li>
+</ul>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/backend/spring-data-jpa-pagination/#disqus_thread</comments>
+    </item>
+    
+    <item>
+      <title>【Spring】单应用多数据库的事务管理</title>
+      <link>http://emacoo.cn/backend/spring-transaction/</link>
+      <guid>http://emacoo.cn/backend/spring-transaction/</guid>
+      <pubDate>Sat, 26 Mar 2016 16:00:00 GMT</pubDate>
+      <description>
+      
+        &lt;h2 id=&quot;单应用多数据库的事务管理&quot;&gt;&lt;a href=&quot;#单应用多数据库的事务管理&quot; class=&quot;headerlink&quot; title=&quot;单应用多数据库的事务管理&quot;&gt;&lt;/a&gt;单应用多数据库的事务管理&lt;/h2&gt;&lt;p&gt;&lt;a href=&quot;http://emacoo.cn/blog
+      
+      </description>
+      
+      <content:encoded><![CDATA[<h2 id="单应用多数据库的事务管理"><a href="#单应用多数据库的事务管理" class="headerlink" title="单应用多数据库的事务管理"></a>单应用多数据库的事务管理</h2><p><a href="http://emacoo.cn/blog/spring-boot-multi-db">上篇</a>讲到单应用多数据库的配置，这次我们聊聊单应用多数据库的事务管理。首先我们来了解一下事务。</p>
+<h2 id="什么是数据库事务？"><a href="#什么是数据库事务？" class="headerlink" title="什么是数据库事务？"></a>什么是数据库事务？</h2><blockquote>
+<p>数据库事务(Database Transaction) ，是指作为单个逻辑工作单元执行的一系列操作，要么完全地执行，要么完全地不执行。事务处理可以确保除非事务性单元内的所有操作都成功完成，否则不会永久更新面向数据的资源。一个逻辑工作单元要成为事务，必须满足所谓的ACID（原子性、一致性、隔离性和持久性）属性。<br><a href="http://baike.baidu.com/view/1298364.htm" target="_blank" rel="external">http://baike.baidu.com/view/1298364.htm</a></p>
+</blockquote>
+<p>举个栗子，银行的一次转账操作就可以理解成一个事务，A打钱给B，银行首先从A的账户里扣钱，然后把钱转到B的账户。如果只执行前一步，A肯定不乐意，如果是后一步，换银行不乐意。所以两步要么都执行，要么都不执行。</p>
+<h2 id="单库事务和跨库事务有什么区别？"><a href="#单库事务和跨库事务有什么区别？" class="headerlink" title="单库事务和跨库事务有什么区别？"></a>单库事务和跨库事务有什么区别？</h2><p>一般而言，所谓的数据库事务都是针对单个数据库的事务，即单库事务。而跨库事务，顾名思义，是指涉及多个数据库的事务，理论上也必须满足ACID属性。两者最核心的区别在于，单库事务一般是由数据库保证的，俗称物理事务，而跨库事务一般是由应用保证的，俗称逻辑事务。与单库事务相比，跨库事务执行成本高，稳定性差，管理也更复杂，但在某些场景下，尤其是分布式应用环境下，又是不得不使用的技术。</p>
+<p>再举个栗子，单库事务好比你从北京飞上海，到东航官网买张票就搞定了，而跨库事务好比北京飞纽约，到上海转机，就得买东航转上航的联票，出票就转由携程保证了。</p>
+<h2 id="多数据库下的三种事务使用场景"><a href="#多数据库下的三种事务使用场景" class="headerlink" title="多数据库下的三种事务使用场景"></a>多数据库下的三种事务使用场景</h2><p>了解了单库事务和跨库事务之后，我们再来看看多数据库下的三种事务使用场景。假设有DB1，DB2两个数据库，分别对应ServiceA和ServiceB两个带上事务注解的服务类，根据调用关系，可细分为三种场景。</p>
+<h3 id="场景一：仅调用ServiceA，ServiceA不调用ServiceB"><a href="#场景一：仅调用ServiceA，ServiceA不调用ServiceB" class="headerlink" title="场景一：仅调用ServiceA，ServiceA不调用ServiceB"></a>场景一：仅调用ServiceA，ServiceA不调用ServiceB</h3><p>这种情况等同于单库事务，无需特殊处理。</p>
+<h3 id="场景二：仅调用ServiceA，ServiceA再调用ServiceB"><a href="#场景二：仅调用ServiceA，ServiceA再调用ServiceB" class="headerlink" title="场景二：仅调用ServiceA，ServiceA再调用ServiceB"></a>场景二：仅调用ServiceA，ServiceA再调用ServiceB</h3><p><img src="QQ20160327-0.png" alt=""></p>
+<h3 id="场景三：先调用ServiceA，再调用ServiceB"><a href="#场景三：先调用ServiceA，再调用ServiceB" class="headerlink" title="场景三：先调用ServiceA，再调用ServiceB"></a>场景三：先调用ServiceA，再调用ServiceB</h3><p><img src="QQ20160327-1.png" alt=""></p>
+<p>场景二和场景三是两种典型的跨库事务，Spring默认的事务管理并无法保证事务的属性。对于场景二，在调用ServiceB之后，如果ServiceA出错，ServiceB并不会回滚。而对于场景三，在调用ServiceB之前，ServiceA的事务已经完成，因此当ServiceB出错回滚时，ServiceA并不会同步回滚。</p>
+<p>如何解决？前面说过，跨库事务一般是由应用保证，因此办法有很多。标准的方法是使用JTA框架进行两段式提交，比如开源的<a href="https://www.atomikos.com/Main/WebHome" target="_blank" rel="external">Atomikos</a>，<a href="https://github.com/bitronix/btm" target="_blank" rel="external">Bitronix</a>。粗暴一点，可以显式创建两个事务，将所有的服务调用包在其中。考虑到本文单应用的环境，还有第三种方式，根据所涉及的事务列表，动态构造调用链，把所有的服务调用封装到最内层，由外层的事务注解链保证跨库事务。</p>
+<p>定义事务代理类，每一个类代理一个数据库事务：</p>
+<pre><code>@Component
+public class Db1TxBroker {
+    @Transactional(DbConstants.TX_DB1)
+    public &lt;V&gt; V inAccount(Callable&lt;V&gt; callable) {
+        try {
+            return callable.call();
+        } catch (Exception e) {
+            throw new ServiceException(e);
+        }
+    }
+}
+</code></pre><p>负责生成调用链的服务基类：</p>
+<pre><code>public abstract class BaseComboService {
+
+    @Autowired
+    private Db1TxBroker db1TxBroker;
+
+    @Autowired
+    private Db2TxBroker db2TxBroker;
+
+    /**
+     * 根据传入的事务链构造调用链,在最内层调用包含业务逻辑的callable.
+     *
+     * @param callable
+     * @param txes 所涉及的完整事务列表(顺序无关)
+     */
+    protected &lt;V&gt; V combine(Callable&lt;V&gt; callable, TX... txes) {
+        if (callable == null) {
+            return null;
+        }
+
+        Callable&lt;V&gt; combined = Stream.of(txes).filter(Objects::nonNull).distinct().reduce(callable, (r, tx) -&gt; {
+            switch (tx) {
+                case DB1:
+                    return () -&gt; db1TxBroker.inDb1(r);
+                case DB2:
+                    return () -&gt; db2TxBroker.inDb2(r);
+                default:
+                    // should not happen
+                    return null;
+            }
+        }, (r1, r2) -&gt; r2);
+        try {
+            return combined.call();
+        } catch (Exception e) {
+            throw new ServiceException(e);
+        }
+    }
+}
+</code></pre><p>使用示例：</p>
+<pre><code>@Service
+public class DemoComboService extends BaseComboService {
+
+    @Autowired
+    private ServiceA serviceA;
+
+    @Autowired
+    private ServiceB serviceB;
+
+    public void demo() {
+        combine(() -&gt; {
+            serviceA.flyToShanghai();
+            serviceB.flyToNewYork();
+            return null;
+        }, TX.DB1, TX.DB2);
+    }
+}
+</code></pre><p>相比JTA，上述第三种方法最大的优点是更轻量，配置更简单，但只能工作在单个应用的环境。对于分布式应用，后者就无能为力了。这种方法本质上还是借助Spring的事务注解来保证跨库事务，如果将来Spring的事务注解支持JDK8的@Repeatable特性，那就可以直接在方法上加上多个事务注解来达到同样目的。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="https://spring.io/blog/2011/08/15/configuring-spring-and-jta-without-full-java-ee/" target="_blank" rel="external">Configuring Spring and JTA without full Java EE</a></li>
+<li><a href="http://jinnianshilongnian.iteye.com/blog/1441271" target="_blank" rel="external">Spring的事务之编程式事务</a></li>
+</ul>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/backend/spring-transaction/#disqus_thread</comments>
+    </item>
+    
+    <item>
+      <title>【Spring】Redis的两个典型应用场景</title>
+      <link>http://emacoo.cn/backend/spring-redis/</link>
+      <guid>http://emacoo.cn/backend/spring-redis/</guid>
+      <pubDate>Fri, 11 Mar 2016 16:00:00 GMT</pubDate>
+      <description>
+      
+        &lt;h2 id=&quot;Redis简介&quot;&gt;&lt;a href=&quot;#Redis简介&quot; class=&quot;headerlink&quot; title=&quot;Redis简介&quot;&gt;&lt;/a&gt;Redis简介&lt;/h2&gt;&lt;p&gt;&lt;a href=&quot;http://redis.io/&quot; target=&quot;_blank&quot; rel=&quot;ex
+      
+      </description>
+      
+      <content:encoded><![CDATA[<h2 id="Redis简介"><a href="#Redis简介" class="headerlink" title="Redis简介"></a>Redis简介</h2><p><a href="http://redis.io/" target="_blank" rel="external">Redis</a>是目前业界使用最广泛的内存数据存储。相比memcached，Redis支持更丰富的数据结构，例如hashes, lists, sets等，同时支持数据持久化。除此之外，Redis还提供一些类数据库的特性，比如事务，HA，主从库。可以说Redis兼具了缓存系统和数据库的一些特性，因此有着丰富的应用场景。本文介绍Redis在Spring Boot中两个典型的应用场景。</p>
+<h2 id="场景1：数据缓存"><a href="#场景1：数据缓存" class="headerlink" title="场景1：数据缓存"></a>场景1：数据缓存</h2><p>第一个应用场景是数据缓存，最典型的当属缓存数据库查询结果。对于高频读低频写的数据，使用缓存可以第一，加速读取过程，第二，降低数据库压力。通过引入spring-boot-starter-redis依赖和注册RedisCacheManager，Redis可以无缝的集成进Spring的缓存系统，自动绑定@Cacheable, @CacheEvict等缓存注解。</p>
+<p>引入依赖：</p>
+<pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-redis&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre><p>Redis配置（application.properties）:</p>
+<pre><code># REDIS (RedisProperties)
+spring.redis.host=localhost
+spring.redis.password=
+spring.redis.database=0
+</code></pre><p>注册RedisCacheManager：</p>
+<pre><code>@Configuration
+@EnableCaching
+public class CacheConfig {
+
+    @Autowired
+    private JedisConnectionFactory jedisConnectionFactory;
+
+    @Bean
+    public RedisCacheManager cacheManager() {
+        RedisCacheManager redisCacheManager = new RedisCacheManager(redisTemplate());
+        return redisCacheManager;
+    }
+
+    @Bean
+    public RedisTemplate&lt;Object, Object&gt; redisTemplate() {
+        RedisTemplate&lt;Object, Object&gt; redisTemplate = new RedisTemplate&lt;Object, Object&gt;();
+        redisTemplate.setConnectionFactory(jedisConnectionFactory);
+        // 使用String格式序列化缓存键
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        return redisTemplate;
+    }
+
+}
+</code></pre><p>@Cachable, @CacheEvict使用，Redis中的存储结构可参见场景2中的配图：</p>
+<pre><code>@Cacheable(value=&quot;signonCache&quot;, key=&quot;&apos;petstore:signon:&apos;+#username&quot;, unless=&quot;#result==null&quot;)
+public Signon findByName(String username) {
+    return dao.fetchOneByUsername(username);
+}
+
+@CacheEvict(value=&quot;signonCache&quot;, key=&quot;&apos;petstore:signon:&apos;+#user.username&quot;)
+public void update(Signon user) {
+    dao.update(user);
+}
+</code></pre><ul>
+<li>@Cacheable: 插入缓存<ul>
+<li>value: 缓存名称</li>
+<li>key: 缓存键，一般包含被缓存对象的主键，支持Spring EL表达式</li>
+<li>unless: 只有当查询结果不为空时，才放入缓存</li>
+</ul>
+</li>
+<li>@CacheEvict: 失效缓存</li>
+</ul>
+<blockquote>
+<p>Tip: Spring Redis默认使用JDK进行序列化和反序列化，因此被缓存对象需要实现java.io.Serializable接口，否则缓存出错。</p>
+<p>Tip: 当被缓存对象发生改变时，可以选择更新缓存或者失效缓存，但一般而言，后者优于前者，因为执行速度更快。</p>
+<p>Watchout! 在同一个Class内部调用带有缓存注解的方法，缓存并不会生效。</p>
+</blockquote>
+<h2 id="场景2：共享Session"><a href="#场景2：共享Session" class="headerlink" title="场景2：共享Session"></a>场景2：共享Session</h2><p>共享Session是第二个典型应用场景，这是利用了Redis的堆外内存特性。要保证分布式应用的可伸缩性，带状态的Session对象是绕不过去的一道坎。一种方式是将Session持久化到数据库中，缺点是读写成本太高。另一种方式是去Session化，比如Play直接将Session存到客户端的Cookie中，缺点是存储信息的大小受限。将Session缓存到Redis中，既保证了可伸缩性，同时又避免了前面两者的限制。</p>
+<p>引入依赖：</p>
+<pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.session&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-session-data-redis&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre><p>Session配置：</p>
+<pre><code>@Configuration
+@EnableRedisHttpSession(maxInactiveIntervalInSeconds = 86400)
+public class SessionConfig {
+}
+</code></pre><ul>
+<li>maxInactiveIntervalInSeconds: 设置Session失效时间，使用Redis Session之后，原Boot的server.session.timeout属性不再生效</li>
+</ul>
+<p>Redis中的session对象：</p>
+<p><img src="QQ20160313-0.png" alt=""></p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>上面结合示例代码介绍了数据缓存，共享Session两个Redis的典型应用场景，除此之外，还有分布式锁，全局计数器等高级应用场景，以后在其他文章中再详细介绍。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="http://docs.spring.io/spring-data/redis/docs/current/reference/html/" target="_blank" rel="external">Spring Data Redis</a></li>
+<li><a href="http://jinnianshilongnian.iteye.com/blog/2001040" target="_blank" rel="external">Spring Cache抽象详解</a></li>
+<li><a href="http://docs.spring.io/spring-session/docs/current/reference/html5/#httpsession-redis" target="_blank" rel="external">HttpSession with Redis</a></li>
+</ul>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/backend/spring-redis/#disqus_thread</comments>
+    </item>
+    
+    <item>
+      <title>【Spring】关于Boot应用中集成Spring Security你必须了解的那些事</title>
+      <link>http://emacoo.cn/backend/spring-boot-security/</link>
+      <guid>http://emacoo.cn/backend/spring-boot-security/</guid>
+      <pubDate>Sat, 05 Mar 2016 16:00:00 GMT</pubDate>
+      <description>
+      
+        &lt;h2 id=&quot;Spring-Security&quot;&gt;&lt;a href=&quot;#Spring-Security&quot; class=&quot;headerlink&quot; title=&quot;Spring Security&quot;&gt;&lt;/a&gt;Spring Security&lt;/h2&gt;&lt;p&gt;Spring Security是Sp
+      
+      </description>
+      
+      <content:encoded><![CDATA[<h2 id="Spring-Security"><a href="#Spring-Security" class="headerlink" title="Spring Security"></a>Spring Security</h2><p>Spring Security是Spring社区的一个顶级项目，也是Spring Boot官方推荐使用的Security框架。除了常规的Authentication和Authorization之外，Spring Security还提供了诸如ACLs，LDAP，JAAS，CAS等高级特性以满足复杂场景下的安全需求。虽然功能强大，Spring Security的配置并不算复杂（得益于官方详尽的文档），尤其在3.2版本加入Java Configuration的支持之后，可以彻底告别令不少初学者望而却步的XML Configuration。在使用层面，Spring Security提供了多种方式进行业务集成，包括注解，Servlet API，JSP Tag，系统API等。下面就结合一些示例代码介绍Boot应用中集成Spring Security的几个关键点。</p>
+<h3 id="1-核心概念"><a href="#1-核心概念" class="headerlink" title="1 核心概念"></a>1 核心概念</h3><p>Principle(User), Authority(Role)和Permission是Spring Security的3个核心概念。跟通常理解上Role和Permission之间一对多的关系不同，在Spring Security中，Authority和Permission是两个完全独立的概念，两者并没有必然的联系，但可以通过配置进行关联。</p>
+<h3 id="2-基础配置"><a href="#2-基础配置" class="headerlink" title="2 基础配置"></a>2 基础配置</h3><p>首先在项目的pom.xml中引入spring-boot-starter-security依赖。</p>
+<pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-security&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre><p>和其余Spring框架一样，XML Configuration和Java Configuration是Spring Security的两种常用配置方式。Spring 3.2版本之后，Java Configuration因其流式API支持，强类型校验等特性，逐渐替代XML Configuration成为更广泛的配置方式。下面是一个示例Java Configuration。</p>
+<pre><code>@Configuration
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Autowired
+    MyUserDetailsService detailsService;
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests()
+                .and().formLogin().loginPage(&quot;/login&quot;).permitAll().defaultSuccessUrl(&quot;/&quot;, true)
+                .and().logout().logoutUrl(&quot;/logout&quot;)
+                .and().sessionManagement().maximumSessions(1).expiredUrl(&quot;/expired&quot;)
+                .and()
+                .and().exceptionHandling().accessDeniedPage(&quot;/accessDenied&quot;);
+    }
+
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring().antMatchers(&quot;/js/**&quot;, &quot;/css/**&quot;, &quot;/images/**&quot;, &quot;/**/favicon.ico&quot;);
+    }
+
+    @Override
+    public void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(detailsService).passwordEncoder(new BCryptPasswordEncoder());
+    }
+
+}
+</code></pre><ul>
+<li>@EnableWebSecurity: 禁用Boot的默认Security配置，配合@Configuration启用自定义配置（需要扩展WebSecurityConfigurerAdapter）</li>
+<li>@EnableGlobalMethodSecurity(prePostEnabled = true): 启用Security注解，例如最常用的@PreAuthorize</li>
+<li>configure(HttpSecurity): Request层面的配置，对应XML Configuration中的<code>&lt;http&gt;</code>元素</li>
+<li>configure(WebSecurity): Web层面的配置，一般用来配置无需安全检查的路径</li>
+<li>configure(AuthenticationManagerBuilder): 身份验证配置，用于注入自定义身份验证Bean和密码校验规则</li>
+</ul>
+<h3 id="3-扩展配置"><a href="#3-扩展配置" class="headerlink" title="3 扩展配置"></a>3 扩展配置</h3><p>完成基础配置之后，下一步就是实现自己的UserDetailsService和PermissionEvaluator，分别用于自定义Principle, Authority和Permission。</p>
+<pre><code>@Component
+public class MyUserDetailsService implements UserDetailsService {
+
+    @Autowired
+    private LoginService loginService;
+
+    @Autowired
+    private RoleService roleService;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) {
+        if (StringUtils.isBlank(username)) {
+            throw new UsernameNotFoundException(&quot;用户名为空&quot;);
+        }
+
+        Login login = loginService.findByUsername(username).orElseThrow(() -&gt; new UsernameNotFoundException(&quot;用户不存在&quot;));
+
+        Set&lt;GrantedAuthority&gt; authorities = new HashSet&lt;&gt;();
+        roleService.getRoles(login.getId()).forEach(r -&gt; authorities.add(new SimpleGrantedAuthority(r.getName())));
+
+        return new org.springframework.security.core.userdetails.User(
+                username, login.getPassword(),
+                true,//是否可用
+                true,//是否过期
+                true,//证书不过期为true
+                true,//账户未锁定为true
+                authorities);
+    }
+}
+</code></pre><blockquote>
+<p>创建GrantedAuthority对象时，一般名称加上ROLE_前缀。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">@Component</div><div class="line">public class MyPermissionEvaluator implements PermissionEvaluator &#123;</div><div class="line"></div><div class="line">	@Autowired</div><div class="line">	private LoginService loginService;</div><div class="line"></div><div class="line">	@Autowired</div><div class="line">	private RoleService roleService;</div><div class="line"></div><div class="line">	@Override</div><div class="line">   	public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) &#123;</div><div class="line">           String username = authentication.getName();</div><div class="line">           Login login = loginService.findByUsername(username).get();</div><div class="line">           return roleService.authorized(login.getId(), targetDomainObject.toString(), permission.toString());</div><div class="line">   	&#125;</div><div class="line"></div><div class="line">    @Override</div><div class="line">   	public boolean hasPermission(Authentication authentication, Serializable targetId, String targetType, Object permission) &#123;</div><div class="line">	    // not supported</div><div class="line">    	return false;</div><div class="line">   	&#125;</div><div class="line">   &#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>hasPermission(Authentication, Object, Object)和hasPermission(Authentication, Serializable, String, Object)两个方法分别对应Spring Security中两个同名的表达式。</li>
+</ul>
+<h3 id="4-业务集成"><a href="#4-业务集成" class="headerlink" title="4 业务集成"></a>4 业务集成</h3><p>Spring Security提供了注解，Servlet API，JSP Tag，系统API等多种方式进行集成，最常用的是第一种方式，包含@Secured, @PreAuthorize, @PreFilter, @PostAuthorize和@PostFilter五个注解。@Secure是最初版本中的一个注解，自3.0版本引入了支持Spring EL表达式的其余四个注解之后，就很少使用了。</p>
+<pre><code>@RequestMapping(value = &quot;/hello&quot;, method = RequestMethod.GET)
+@PreAuthorize(&quot;authenticated and hasPermission(&apos;hello&apos;, &apos;view&apos;)&quot;)
+public String hello(Model model) {
+    String username = SecurityContextHolder.getContext().getAuthentication().getName();
+    model.addAttribute(&quot;message&quot;, username);
+    return &quot;hello&quot;;
+}
+</code></pre><ul>
+<li>@PreAuthorize(“authenticated and hasPermission(‘hello’, ‘view’)”): 表示只有当前已登录的并且拥有(“hello”, “view”)权限的用户才能访问此页面</li>
+<li>SecurityContextHolder.getContext().getAuthentication().getName(): 获取当前登录的用户，也可以通过HttpServletRequest.getRemoteUser()获取</li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>以上就是Spring Security的一般集成步骤，更多细节和高级特性可参考官方文档。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="http://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/" target="_blank" rel="external">http://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/</a></li>
+<li><a href="http://docs.spring.io/spring-security/site/docs/current/reference/htmlsingle/" target="_blank" rel="external">http://docs.spring.io/spring-security/site/docs/current/reference/htmlsingle/</a></li>
+</ul>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/backend/spring-boot-security/#disqus_thread</comments>
+    </item>
+    
+    <item>
+      <title>【Spring】如何在单个Boot应用中配置多数据库？</title>
+      <link>http://emacoo.cn/backend/spring-boot-multi-db/</link>
+      <guid>http://emacoo.cn/backend/spring-boot-multi-db/</guid>
+      <pubDate>Sat, 20 Feb 2016 16:00:00 GMT</pubDate>
+      <description>
+      
+        &lt;h2 id=&quot;为什么需要多数据库？&quot;&gt;&lt;a href=&quot;#为什么需要多数据库？&quot; class=&quot;headerlink&quot; title=&quot;为什么需要多数据库？&quot;&gt;&lt;/a&gt;为什么需要多数据库？&lt;/h2&gt;&lt;p&gt;默认情况下，Spring Boot使用的是单数据库配置（通过spring.d
+      
+      </description>
+      
+      <content:encoded><![CDATA[<h2 id="为什么需要多数据库？"><a href="#为什么需要多数据库？" class="headerlink" title="为什么需要多数据库？"></a>为什么需要多数据库？</h2><p>默认情况下，Spring Boot使用的是单数据库配置（通过spring.datasource.*配置具体数据库连接信息）。对于绝大多数Spring Boot应用，这是符合其使用场景的，因为Spring Boot提倡的是微服务理念，每个应用对应一个单独的业务领域。但在某些特殊情况下，一个应用对应多个数据库又是无法避免的，例如实施数据库分库后原本单个数据库变为多个数据库。本文就结合实际代码介绍如何在单个Boot应用中配置多数据库，以及与之相关的Druid，jOOQ，Flyway等数据服务框架的配置改造。</p>
+<h2 id="配置示例"><a href="#配置示例" class="headerlink" title="配置示例"></a>配置示例</h2><p><img src="QQ20160221-0.png" alt=""></p>
+<ul>
+<li>DB1，DB2: 两个示例数据库</li>
+<li>ServiceA, ServiceB: 分别使用DB1和DB2的服务类</li>
+</ul>
+<h3 id="连接池Druid"><a href="#连接池Druid" class="headerlink" title="连接池Druid"></a>连接池Druid</h3><p><a href="https://github.com/alibaba/druid" target="_blank" rel="external">Druid</a>是阿里巴巴开源的数据库连接池，提供了强大的监控支持，号称Java语言中最好的连接池。</p>
+<p>创建两个配置类分别注册对应DB1和DB2的DataSource Bean和TransactionManager Bean。以DB1为例：</p>
+<blockquote>
+<p>Tip: 可以把其中一个配置类中注册的DataSource Bean和DataSourceTransactionManager Bean加上@Primary注解，作为默认装配实例。</p>
+</blockquote>
+<pre><code>// DB1
+@Configuration
+public class Db1Config {
+
+    @Bean(initMethod = &quot;init&quot;, destroyMethod = &quot;close&quot;)
+    @ConfigurationProperties(prefix = &quot;db.db1&quot;)
+    public DataSource dataSource1() {
+        return new DruidDataSource();
+    }
+
+    @Bean
+    public DataSourceTransactionManager transactionManager1() {
+        DataSourceTransactionManager transactionManager = new DataSourceTransactionManager();
+        transactionManager.setDataSource(dataSource1());
+        return transactionManager;
+    }
+}
+</code></pre><p>application.conf中的配置：</p>
+<pre><code># DB1
+db.db1.url=jdbc:mysql://127.0.0.1:3306/db1?useUnicode=true&amp;characterEncoding=UTF-8&amp;rewriteBatchedStatements=true
+db.db1.username=root
+db.db1.password=
+</code></pre><h3 id="ORM框架jOOQ"><a href="#ORM框架jOOQ" class="headerlink" title="ORM框架jOOQ"></a>ORM框架jOOQ</h3><p><a href="http://www.jooq.org/" target="_blank" rel="external">jOOQ</a>是一个开源ORM框架，最大特点是提供类型安全的流式API，支持代码生成。</p>
+<p>参照Boot自带的JooqAutoConfiguration，不难写出如下配置类：</p>
+<pre><code>@Configuration
+public class JooqConfig {
+
+    // DB1
+    @Bean
+    public DataSourceConnectionProvider dataSourceConnectionProvider1(
+            @Qualifier(&quot;dataSource1&quot;) DataSource dataSource1) {
+        return new DataSourceConnectionProvider(
+                new TransactionAwareDataSourceProxy(dataSource1));
+    }
+
+    @Bean
+    public SpringTransactionProvider transactionProvider1(
+            @Qualifier(&quot;transactionManager1&quot;) DataSourceTransactionManager txManager1) {
+        return new SpringTransactionProvider(txManager1);
+    }
+
+    // DB2
+    // ...
+
+    @Configuration
+    public static class DslContextConfig {
+
+        @Autowired(required = false)
+        private RecordMapperProvider recordMapperProvider;
+
+        @Autowired(required = false)
+        private Settings settings;
+
+        @Autowired(required = false)
+        private RecordListenerProvider[] recordListenerProviders;
+
+        @Autowired
+        private ExecuteListenerProvider[] executeListenerProviders;
+
+        @Autowired(required = false)
+        private VisitListenerProvider[] visitListenerProviders;
+
+        // DSLContext for DB1
+        @Bean
+        public DefaultDSLContext dslContext1(@Qualifier(&quot;dataSourceConnectionProvider1&quot;) DataSourceConnectionProvider connectionProvider1,
+                                            @Qualifier(&quot;transactionProvider1&quot;) SpringTransactionProvider transactionProvider1) {
+            return new DefaultDSLContext(configuration(connectionProvider1, transactionProvider1));
+        }
+
+        // DSLContext for DB2
+        // ...
+
+        private DefaultConfiguration configuration(ConnectionProvider connectionProvider, TransactionProvider transactionProvider) {
+            DefaultConfiguration configuration = new DefaultConfiguration();
+            configuration.setSQLDialect(SQLDialect.MYSQL);
+            configuration.set(connectionProvider);
+            configuration.set(transactionProvider);
+            if (this.recordMapperProvider != null) {
+                configuration.set(this.recordMapperProvider);
+            }
+            if (this.settings != null) {
+                configuration.set(this.settings);
+            }
+            configuration.set(this.recordListenerProviders);
+            configuration.set(this.executeListenerProviders);
+            configuration.set(this.visitListenerProviders);
+            return configuration;
+        }
+    }
+}
+</code></pre><h3 id="服务类"><a href="#服务类" class="headerlink" title="服务类"></a>服务类</h3><p>配置好DataSource，TransacationManager和DSLContext之后，服务类的配置就比较简单了，直接引用即可。注意由于存在多套Beans，需要通过@Qualifier注解指定装配实例。</p>
+<pre><code>@Transactional(&quot;TransactionManager1&quot;)
+public class ServiceA {
+
+    @Autowired
+    @Qualifier(&quot;dslContext1&quot;)
+    protected DSLContext dsl;
+}
+</code></pre><h3 id="数据库迁移框架Flyway"><a href="#数据库迁移框架Flyway" class="headerlink" title="数据库迁移框架Flyway"></a>数据库迁移框架Flyway</h3><p><a href="https://flywaydb.org/" target="_blank" rel="external">Flyway</a>是一个轻量级的开源数据库迁移框架，使用非常广泛。</p>
+<p>参照Boot自带的FlywayAutoConfiguration，同样可以写出如下配置类：</p>
+<pre><code>@Configuration
+public class FlywayConfig {
+
+    @Bean(initMethod = &quot;migrate&quot;)
+    @ConfigurationProperties(prefix = &quot;fw.db1&quot;)
+    public Flyway flyway(@Qualifier(&quot;dataSource1&quot;) DataSource dataSource1) {
+        Flyway clinic = new Flyway();
+        clinic.setDataSource(dataSource1);
+        return clinic;
+    }
+
+    // DB2
+    // ...
+
+    /**
+     * @see FlywayAutoConfiguration
+     */
+    @Bean
+    @ConfigurationPropertiesBinding
+    public StringOrNumberToMigrationVersionConverter stringOrNumberMigrationVersionConverter() {
+        return new StringOrNumberToMigrationVersionConverter();
+    }
+
+    /**
+     * Convert a String or Number to a {@link MigrationVersion}.
+     * @see FlywayAutoConfiguration
+     */
+    private static class StringOrNumberToMigrationVersionConverter
+            implements GenericConverter {
+
+        private static final Set&lt;ConvertiblePair&gt; CONVERTIBLE_TYPES;
+
+        static {
+            Set&lt;ConvertiblePair&gt; types = new HashSet&lt;ConvertiblePair&gt;(2);
+            types.add(new ConvertiblePair(String.class, MigrationVersion.class));
+            types.add(new ConvertiblePair(Number.class, MigrationVersion.class));
+            CONVERTIBLE_TYPES = Collections.unmodifiableSet(types);
+        }
+
+        @Override
+        public Set&lt;ConvertiblePair&gt; getConvertibleTypes() {
+            return CONVERTIBLE_TYPES;
+        }
+
+        @Override
+        public Object convert(Object source, TypeDescriptor sourceType,
+                              TypeDescriptor targetType) {
+            String value = ObjectUtils.nullSafeToString(source);
+            return MigrationVersion.fromVersion(value);
+        }
+
+    }
+}
+</code></pre><p>application.conf中的配置：</p>
+<pre><code># DB1
+fw.db1.enabled=true
+</code></pre><h2 id="关于事务"><a href="#关于事务" class="headerlink" title="关于事务"></a>关于事务</h2><p>有经验的同学马上会问，多数据库下事务会不会有问题？需要改造成分布式事务吗？只要为每个数据库创建独立的TransactionManager，就不会有问题，Spring会自动处理好事务的提交和回滚，就像单数据库一样。至于分布式事务，大可不必，因为虽然有多个数据库，但仍然属于Local Transaction范畴。以后有时间我会再写篇文章展开阐述一下。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>由上可见，无论是基础的DataSource和TransactionManager，还是Spring之外的第三方框架，在Boot中基本都可以找到相应的AutoConfiguration配置类。参照这些配置类，就不难根据实际需要写出自己的扩展版本。对于那些找不到AutoConfiguration配置类的，可结合框架的官方文档，使用@Configuration和@Bean注解自行进行配置。</p>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/backend/spring-boot-multi-db/#disqus_thread</comments>
+    </item>
+    
+    <item>
+      <title>【翻译】Scala的起源 —— Martin Odersky访谈（一）</title>
+      <link>http://emacoo.cn/coding/scala-origins/</link>
+      <guid>http://emacoo.cn/coding/scala-origins/</guid>
+      <pubDate>Sun, 31 Jan 2016 16:00:00 GMT</pubDate>
+      <description>
+      
+        &lt;p&gt;Scala是一种运行在JVM之上的通用的，面向对象的函数式语言。它的作者是Martin Odersky，一位来自洛桑联邦理工大学（EPFL）的教授。作为本系列访谈的第一部分，Martin Odersky和Artima网站的Bill Venners一起讨论了Scala的历史和
+      
+      </description>
+      
+      <content:encoded><![CDATA[<p>Scala是一种运行在JVM之上的通用的，面向对象的函数式语言。它的作者是Martin Odersky，一位来自洛桑联邦理工大学（EPFL）的教授。作为本系列访谈的第一部分，Martin Odersky和Artima网站的Bill Venners一起讨论了Scala的历史和起源。</p>
+<h2 id="结缘编译器"><a href="#结缘编译器" class="headerlink" title="结缘编译器"></a>结缘编译器</h2><p><strong>Bill Venners</strong>: 让我们回到最初。你是如何接触编程语言的？</p>
+<blockquote>
+<p><strong>Martin Odersky</strong>: 编译器和编程语言从来都是我最爱的课题。1980年，那时我还在读本科，当我第一次搞明白什么是编译器，我立刻就想自己构建一个。我当时唯一能买的起的电脑就是拥有1K内存的Sinclair ZX 80。我差点就能一试身手，不过幸运的是，很快我接触到一台更强大的电脑，Osborne-1。它是世界上第一台便携式电脑，从远处看起来就像一台倾斜了90度的缝纫机。它拥有5英寸屏幕，每行显示52个字符。最令人印象深刻的是它拥有56K内存以及两个90K的软盘驱动器。</p>
+<p>那段时间，我经常和学校里一名叫Peter Sollich的学生在一起。我们通过阅读了解到一门新的被称为Modula-2的语言，我们发现这门语言不仅非常优雅而且设计也很棒。于是我们就产生了为8位的Z80电脑设计Modula-2编译器的念头。不过Osborne有一个小问题，它只自带微软Basic这一门语言。这跟我们的预想完全不相符，因为Basic语言只支持全局变量，甚至不支持带参数的过程。而当时其它的编译器对我们而言都太贵了。于是我们决定采用经典的引导技术（bootstrapping technique）。Peter曾经用Z80的汇编语言写过一个支持部分Pascal语法的编译器。我们使用这个编译器编译了更大一点的语言，然后再更大一点，迭代数次后，直至我们能够编译所有Modula-2的语法。这个新的编译器能够生成用于解释执行的字节码以及相应的Z80上的二进制文件。这些字节码是当时任何系统上所能生成的最紧凑的字节码，相应的二进制版本也是8位电脑上运行最快的。这个编译器在当时可以说是相当棒的。</p>
+<p>就在我们快完成我们的编译器时，Borland推出了Turbo Pascal，并且准备进军Modula-2市场。实际上，Borland决定购买我们的Modula-2编译器，重新冠以Turbo Module-2（CP/M版本）的名称和另一款他们打算开发的IBM PC版本一起搭售。我们提出为他们开发这个IBM PC版本，但是他们告诉我们他们已经有人在着手做了。三或四年之后，当这款编译器最终面世时，实现它的团队已经从Borland分离出来，并且为这款编译器起了一个新的名字，TopSpeed Module-2。在缺少IBM PC版本的情况下，Borland从来没有进行过任何Turbo Modula-2的市场推广，因此它也一直默默无名。</p>
+<p>当我们完成Modula-2编译器时，Borland立刻提出聘请Peter和我。Peter加入了他们。我差点也去了，但是我还有一年的课程以及研究生计划。我当时对从大学辍学的念头也很动心。最后，我还是决定留在学校。在我读研期间（研究课题是增量解析），我发现我非常喜欢做研究。所以最终，我放弃了去Borland写编译器的念头，转而去ETH Zurich跟随Pascal和Module-2的发明者Niklaus Wirth攻读博士学位。</p>
+</blockquote>
+<h2 id="更好的Java"><a href="#更好的Java" class="headerlink" title="更好的Java"></a>更好的Java</h2><p><strong>Bill Venners</strong>: Scala是如何产生的？它的历史是什么样的？</p>
+<blockquote>
+<p><strong>Martin Odersky</strong>: 1988、1989年之间，当我即将结束在Zurich的学业，我对函数式编程产生了极大的兴趣。所以我留下来继续做研究，最后成为了德国Karlsruhe大学的一名教授。一开始我专注于偏理论的编程领域，比如按需调用（call-by-need）的λ演算。这部分工作是和当时在Glasgow大学的Phil Wadler一起进行的。一天，Phil告诉我他组里的一个助教听说有一门新的语言正在兴起，目前处于Alpha版本，名字叫Java。它是可迁移的，能够产生字节码，运行在web端，并且有垃圾回收机制。这门语言将颠覆你的工作。你准备怎么办？Phil说。好吧，他也许是对的。</p>
+<p>回答是Phil Wadler和我决定将一部分函数式编程的概念植入到Java世界中。这部分工作诞生了一门叫Pizza的语言，它拥有3个函数式编程的特性，泛型，高阶函数和模式匹配。Pizza首次发布于1996年，在Java面世后的一年。它成功的证明了在JVM平台上是能够实现函数式语言特性的。</p>
+<p>于是我们联系了Sun公司核心开发团队的Gilad Bracha和David Stoutamire。他们回应说，“我们对你们正在做的泛型那部分工作很感兴趣。我们可以开始一个新的专注于此的项目。”那个项目被称为GJ（Generic Java）。1997、1998年之间，我们完成了GJ的开发。六年后，加上一些之前我们没做的特性，它成为了Java 5中的泛型。值得一提的是，Java泛型中的通配符是在我们之后由Gilad Bracha和Aarhus大学的其他人一起独立完成的。</p>
+<p>虽然我们的泛型扩展延期了六年才推出，Sun对我写的GJ编译器产生了更强烈的兴趣。它被证明比Sun最初版本的Java编译器更稳定也更易维护。所以他们决定从2000年发布的Java 1.3版本起，使用GJ编译器作为标准的Java编译器。</p>
+</blockquote>
+<h2 id="超越Java"><a href="#超越Java" class="headerlink" title="超越Java"></a>超越Java</h2><blockquote>
+<p><strong>Martin Odersky</strong>: 在开发Pizza和GJ期间，我有时感到绝望，因为Java是一门限制性很强的语言，很多事情不能按我自认为正确的方式去做。因此，在那之后，当我实质性的工作目标转移到让Java更好上时，我决定是时候后退一步了。我想从头来过，看看我能否设计出一门比Java更好的语言。但同时我知道我不能从零开始，我必须借助于已有的基础架构，没有任何类库、工具的支持去启动这样一个项目是不现实的。所以我决定虽然我的目的是设计一门与Java不同的语言，但这门语言仍然可以与Java的基础架构（JVM和类库）互连。这就是我（设计Scala语言）的初衷。也是在那个时候，我成为了EPFL的一名教授，这为我提供了一个绝佳的进行独立研究的环境。我得以成立一个研究小组，无需成天申请外部津贴。</p>
+<p>起初我们非常激进。我们想创建一门基于一个被称为join calculus的非常完美的并发模型上的语言。我们创建了一个被称为Functional Nets的面向对象版本的join calculus实现，以及一门基于其上的语言Funnal。但没过多久，我们发现作为一门很纯粹的语言，Funnel并没有太多实际意义。Funnal有一个很小的内核。很多大家认为理所应当包含的东西（比如类，模式匹配）只能通过编码的方式植入到内核中。从学术的角度，这是一种很优雅的技巧。但从实践角度，并不是太好。初学者发现这类编码非常困难，而专家们又认为过于重复和单调。</p>
+<p>结果是我们决定重新开始，在非常纯粹的学术性语言Funnal和非常实用但又在一定程度上带有限制性的GJ之间寻找出路。我们想创造一门不仅实用同时又比Java更高级的语言。大约在2002年，我们开始开发这门后来被我们称为Scala的语言，并于2003年发布第一版本。2006年初，又发布了一个相对比较大的重构版本。在此之后，就进入一个稳定的迭代期。</p>
+</blockquote>
+<h2 id="挑战"><a href="#挑战" class="headerlink" title="挑战"></a>挑战</h2><p><strong>Bill Venners</strong>: 你曾说有时候为了保证与Java的兼容性让你非常抓狂。你能给一些具体的起初由于兼容性限制你做不了，但后来从源代码兼容性降为二进制兼容性之后又可以做的例子吗？</p>
+<blockquote>
+<p><strong>Martin Odersky</strong>: 在泛型设计中，存在很多非常非常困难的限制。最强的也是最难解决的限制是需要与没有泛型支持的Java版本兼容。这个问题的背景是Java 1.2版本发布了没有泛型支持的集合类库，那时泛型刚出现，Sun公司还没准备好发布一个全新的基于泛型的集合类库。</p>
+<p>那就是为什么存在这么多非常丑陋的设计的原因。你总是要同时面对非泛型类型和泛型类型（也被成为原始类型）。同样你也不能改变数组的行为，于是你就不得不接受未受检警告。最重要的是，在操作数组时很多你想做的事情是做不了的，比如生成一个拥有未知类型T的数组。后来在Scala中我们实际上发现了一种实现的方式，但那是由于我们给数组加入了协变的特性。</p>
+</blockquote>
+<p><strong>Bill Venners</strong>: 你能够详细说明一下有关Java中协变数组的问题吗？</p>
+<blockquote>
+<p><strong>Martin Odersky</strong>: 最初Java刚发布时，Bill Joy和James Gosling以及其他Java组成员都认为Java应该支持泛型，只是他们没有时间去完善设计并加入进去。正因为最初版本的Java不支持泛型，他们感觉数组应该是协变的。举例来说，那就意味着一个String数组是一个Object数组的子类型。背后的原因是他们想实现一个类泛型的排序方法，接受一个Object数组和一个排序类然后对这个数组进行排序，同时允许你传入一个String数组。结果发现这个设计通常是有缺陷的。那就是为什么在Java中你会得到一个数组存储异常。实际上这个设计最后也阻止了实现一个优雅的泛型数组。那就是为什么Java泛型中根本不支持数组。你不能创建一个类型为String列表的数组，这根本不可能。你永远不得不使用丑陋的原始类型，一个列表类型的数组。所以某种程度上这就是一个原罪。他们完成的很快，认为这只不过是一次快速改造。但实际上这毁掉了之后每一个设计决定。因此，为了避免掉入同样的陷阱，我们不得不停下来宣布，现在我们不再和Java保持向前兼容，我们想做一些不同的事。</p>
+</blockquote>
+<p><em>查看英文原文：<a href="http://www.artima.com/scalazine/articles/origins_of_scala.html" target="_blank" rel="external">The Origins of Scala</a></em></p>
+<p>该系列访谈的其余部分：</p>
+<ul>
+<li><a href="http://www.infoq.com/cn/articles/Scala-Design" target="_blank" rel="external">Scala的设计目标——Martin Odersky访谈（二）</a></li>
+<li><a href="http://www.infoq.com/cn/articles/scala-type-system" target="_blank" rel="external">Scala类型系统的目的——Martin Odersky访谈（三）</a></li>
+<li><a href="http://www.infoq.com/cn/articles/Scala-PatternMatching" target="_blank" rel="external">Scala模式匹配的亮点——Martin Odersky访谈（四）</a></li>
+</ul>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/coding/scala-origins/#disqus_thread</comments>
+    </item>
+    
+    <item>
+      <title>【Web】CDN加速效果浅析</title>
+      <link>http://emacoo.cn/arch/web-cdn-benchmark/</link>
+      <guid>http://emacoo.cn/arch/web-cdn-benchmark/</guid>
+      <pubDate>Sun, 17 Jan 2016 16:00:00 GMT</pubDate>
+      <description>
+      
+        &lt;h2 id=&quot;1-什么是CDN？&quot;&gt;&lt;a href=&quot;#1-什么是CDN？&quot; class=&quot;headerlink&quot; title=&quot;1. 什么是CDN？&quot;&gt;&lt;/a&gt;1. 什么是CDN？&lt;/h2&gt;&lt;blockquote&gt;
+&lt;p&gt;CDN的全称是Content Delivery Net
+      
+      </description>
+      
+      <content:encoded><![CDATA[<h2 id="1-什么是CDN？"><a href="#1-什么是CDN？" class="headerlink" title="1. 什么是CDN？"></a>1. 什么是CDN？</h2><blockquote>
+<p>CDN的全称是Content Delivery Network，即内容分发网络。其目的是通过在现有的Internet中增加一层新的CACHE(缓存)层，将网站的内容发布到最接近用户的网络”边缘”的节点，使用户可以就近取得所需的内容，提高用户访问网站的响应速度。从技术上全面解决由于网络带宽小、用户访问量大、网点分布不均等原因，提高用户访问网站的响应速度。<br><a href="http://www.51know.info/system_performance/cdn/cdn.html" target="_blank" rel="external">http://www.51know.info/system_performance/cdn/cdn.html</a></p>
+</blockquote>
+<p>可以认为，CDN就是加上了智能DNS和缓存层的反向代理集群。由于智能DNS能够根据请求的来源定位到离用户较近的缓存服务器，因此有效的缩短了连接时间，而缓存层的存在极大的提高了下载速度，并且不再受限于源站的带宽大小。注意上述第二点仅针对静态资源有意义，对于动态内容（比如POST请求，WebSocket连接），CDN仍然需要将请求发回源站再将结果返回，并不能起到加速作用。下面就针对上述分析进行实验验证。</p>
+<h2 id="2-环境准备"><a href="#2-环境准备" class="headerlink" title="2. 环境准备"></a>2. 环境准备</h2><ul>
+<li>源站，提供静态页面和WebSocket服务。</li>
+<li>CDN，使用腾讯云CDN服务，仅对静态页面设置缓存。</li>
+</ul>
+<h2 id="3-基准测试"><a href="#3-基准测试" class="headerlink" title="3. 基准测试"></a>3. 基准测试</h2><h3 id="3-1-静态页面"><a href="#3-1-静态页面" class="headerlink" title="3.1 静态页面"></a>3.1 静态页面</h3><p>如下图所示，使用CDN之后，无论是连接时间还是下载时间都明显缩短，下载速度也有<strong>5倍</strong>以上的提速。</p>
+<p><img src="web-cdn-benchmark-static.png" alt=""></p>
+<p>测速网站：<a href="http://www.17ce.com/" target="_blank" rel="external">http://www.17ce.com/</a></p>
+<h3 id="3-2-动态内容"><a href="#3-2-动态内容" class="headerlink" title="3.2 动态内容"></a>3.2 动态内容</h3><p>选择一台远离源站的服务器，运行Node基准测试，先后与源站和CDN站建立WebSocket连接，发送消息，计算总耗时。测试结果显示，与直连源站相比，使用CDN并没有起到加速效果，反而有所下降。不难理解，这是因为去掉缓存之后，CDN平白在用户和源站之间多加了一层链路。</p>
+<p><img src="web-cdn-benchmark-ws.png" alt=""></p>
+<h2 id="4-参考"><a href="#4-参考" class="headerlink" title="4. 参考"></a>4. 参考</h2><ul>
+<li><a href="http://www.51know.info/system_performance/cdn/cdn.html" target="_blank" rel="external">http://www.51know.info/system_performance/cdn/cdn.html</a></li>
+<li><a href="http://www.qcloud.com/wiki/CDN%E4%BB%8B%E7%BB%8D" target="_blank" rel="external">http://www.qcloud.com/wiki/CDN%E4%BB%8B%E7%BB%8D</a></li>
+</ul>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/arch/web-cdn-benchmark/#disqus_thread</comments>
+    </item>
+    
+    <item>
+      <title>既然选择了远方，就只顾风雨兼程</title>
+      <link>http://emacoo.cn/notes/xr-ruijin/</link>
+      <guid>http://emacoo.cn/notes/xr-ruijin/</guid>
+      <pubDate>Sat, 09 Jan 2016 16:00:00 GMT</pubDate>
+      <description>
+      
+        &lt;p&gt;周六，早上8:30，这个城市大多数年轻人仍在温暖的被窝里，XR上海23名顾问已准时集结在大会议室，待早会之后便奔赴各自的“战场”。早会里面绩效评比这个环节很有特色，顾问的四项核心绩效指标（活跃数，拜访量，日报，医院照片）分别被比喻成早、中、晚饭加夜宵，让枯燥的数字变得充满关
+      
+      </description>
+      
+      <content:encoded><![CDATA[<p>周六，早上8:30，这个城市大多数年轻人仍在温暖的被窝里，XR上海23名顾问已准时集结在大会议室，待早会之后便奔赴各自的“战场”。早会里面绩效评比这个环节很有特色，顾问的四项核心绩效指标（活跃数，拜访量，日报，医院照片）分别被比喻成早、中、晚饭加夜宵，让枯燥的数字变得充满关怀。</p>
+<p>小何，上海顾问团队第三组小组长，和两位战狼配合打瑞金医院，是我今天的跟访对象。薄夹克，公文包，显得很利落。我问他冷不冷，他说不冷，一天医院跑下来，常常一身汗，不能穿太多。去医院的路上，小何主动跟我聊了一些移动医疗的话题，虽然10月份刚从一家传统的面向企业的软件公司跳槽到我们公司，但他对于互联网和医疗行业已经非常熟悉，对公司的产品和理念也非常认同。</p>
+<p>到了医院，我们先在门诊大楼跟战狼小张会合，然后坐电梯上19楼住院部。昨天小张在那里拿下了一批新的认证医生，今天过去发放台卡。因为是周六，医生办公室里只有一个女医生，见了小何和小张显得很客气。小张发放台卡的时候，我才注意到他除了一个背包，肩上还跨了一个背袋，里面装满了台卡，大概有十个左右。我们的台卡除了纸质日历本，还配有一个木头底座和一块木板，不难想象这一袋台卡着实是有些分量的。一天背下来，也是件体力活。Hunter说去年打北京的时候，20吨礼品生生的被战狼们背进了各家医院，真不是玩笑话。</p>
+<p>在医院做地推其实就是门诊室蹲点和住院部扫楼。像瑞金这样的知名三甲医院，患者多医生多楼也多，大医生们神出鬼没，除了门诊，其他地方难见踪影。而门诊一般都是人满为患，一天中最有效的时间只有中午11点到12点，下午4点到5点这两个小时，战狼和顾问们需要争分夺秒，逐个敲开没人排队的门诊室，给医生们介绍我们的产品和帮助他们掌握基本的操作。一般的流程是，头天战狼帮医生安装好App，第二天顾问上门教会医生使用App。在这之后，顾问会有节奏的持续拜访这些医生，从中筛选出最有可能成为高活跃的医生并提供更有针对性的服务。</p>
+<p>出了门诊大楼，小何带我扫了一遍12层的6号楼，那里是瑞金的一个住院部。坐电梯到12楼，然后逐层往下，每一层有两个医生办公室。临近中午，加上又是周末，办公室都很冷清，一般1到2位，半数都空着。医生们或者在操作电脑，或者在休息，或者在跟患者聊天，这些医生顾问都不会去打扰，他们会找那些正在闲聊或者刷手机的医生。好不容易找到一个，小何赶紧凑上去，三言两句就顺利的拿到那名医生的手机开始过权威认证，演示加患者流程，告之如何开通收费服务等。一圈聊完，我看了一下时钟大概花了10分钟左右。“她成不了高活跃医生。”出了办公室，小何摇了摇头。</p>
+<p>扫完6号楼已经过了12点，小何请我在瑞金食堂吃了午饭。“下午要抓紧了，不然一天又过去了。”小何对自己说，又像是对我说。是啊，要抓紧了，在通往梦想的路上，每一天都蕴含着无限的可能。</p>
+<p>既然选择了远方，就只顾风雨兼程。</p>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/notes/xr-ruijin/#disqus_thread</comments>
+    </item>
+    
+    <item>
+      <title>【Play】热部署是如何工作的？</title>
+      <link>http://emacoo.cn/backend/play-hotdeploy/</link>
+      <guid>http://emacoo.cn/backend/play-hotdeploy/</guid>
+      <pubDate>Sat, 26 Dec 2015 16:00:00 GMT</pubDate>
+      <description>
+      
+        &lt;h2 id=&quot;1-什么是热部署&quot;&gt;&lt;a href=&quot;#1-什么是热部署&quot; class=&quot;headerlink&quot; title=&quot;1.什么是热部署&quot;&gt;&lt;/a&gt;1.什么是热部署&lt;/h2&gt;&lt;blockquote&gt;
+&lt;p&gt;所谓热部署，就是在应用正在运行的时候升级软件，却不需要重新启动应用
+      
+      </description>
+      
+      <content:encoded><![CDATA[<h2 id="1-什么是热部署"><a href="#1-什么是热部署" class="headerlink" title="1.什么是热部署"></a>1.什么是热部署</h2><blockquote>
+<p>所谓热部署，就是在应用正在运行的时候升级软件，却不需要重新启动应用。对于Java应用程序来说，热部署就是在运行时更新Java类文件。<br><a href="http://baike.baidu.com/view/5036687.htm" target="_blank" rel="external">http://baike.baidu.com/view/5036687.htm</a></p>
+</blockquote>
+<p>对于Java应用，有三种常见的实现热部署的方式：</p>
+<ul>
+<li>JPDA: 利用JVM原生的JPDA接口，参见<a href="https://docs.oracle.com/javase/8/docs/technotes/guides/jpda/enhancements1.4.html#hotswap" target="_blank" rel="external">官方文档</a></li>
+<li>Classloader: 通过创建新的Classloader来加载新的Class文件。OSGi就是通过这种方式实现Bundle的动态加载。</li>
+<li>Agent: 通过自定义Java Agent实现Class动态加载。JRebel，hotswapagent使用的就是这种方式。</li>
+</ul>
+<p>Play console自带的auto-reload功能正是基于上述第二种方式实现的。</p>
+<h2 id="2-Auto-reload机制"><a href="#2-Auto-reload机制" class="headerlink" title="2.Auto-reload机制"></a>2.Auto-reload机制</h2><p>Play console是Typesafe封装的一种特殊的的sbt console，主要增加了activator new和activator ui两个命令。其auto-reload功能是以sbt插件（”com.typesafe.play” % “sbt-plugin”）的形式提供的，sbt-plugin通过sbt-run-support类库连接到play开发模式下的启动类（play.core.server.DevServerStart）。每当应用收到请求时，play会通过sbt-plugin检查是否有源文件被修改，如果存在，则调用sbt命令进行编译，然后依次停止老的play应用，创建新的classloader，然后启动新的play应用，在此过程中运行sbt的JVM并没有被重启，只是play应用完成了重启。</p>
+<h2 id="3-源码分析"><a href="#3-源码分析" class="headerlink" title="3.源码分析"></a>3.源码分析</h2><p>以下分别从sbt-plugin,sbt-run-support和play-server挑选3个核心类对上述流程进行简单梳理。</p>
+<h3 id="play-sbt-run-PlayRun"><a href="#play-sbt-run-PlayRun" class="headerlink" title="play.sbt.run.PlayRun"></a>play.sbt.run.PlayRun</h3><p>定义play run task，通过Reloader传递sbt回调函数引用给DevServerStart。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">[<span class="type">Line</span> <span class="number">73</span><span class="number">-93</span>: <span class="type">PlayRun</span>#playRunTask]</div><div class="line"><span class="keyword">lazy</span> <span class="keyword">val</span> devModeServer = <span class="type">Reloader</span>.startDevMode(</div><div class="line">      runHooks.value,</div><div class="line">      (javaOptions in <span class="type">Runtime</span>).value,</div><div class="line">      dependencyClasspath.value.files,</div><div class="line">      dependencyClassLoader.value,</div><div class="line">      reloadCompile,										# sbt回调函数引用</div><div class="line">      reloaderClassLoader.value,</div><div class="line">      assetsClassLoader.value,</div><div class="line">      playCommonClassloader.value,</div><div class="line">      playMonitoredFiles.value,</div><div class="line">      fileWatchService.value,</div><div class="line">      (managedClasspath in <span class="type">DocsApplication</span>).value.files,</div><div class="line">      playDocsJar.value,</div><div class="line">      playDefaultPort.value,</div><div class="line">      playDefaultAddress.value,</div><div class="line">      baseDirectory.value,</div><div class="line">      devSettings.value,</div><div class="line">      args,</div><div class="line">      runSbtTask,</div><div class="line">      (mainClass in (<span class="type">Compile</span>, <span class="type">Keys</span>.run)).value.get</div><div class="line">    )</div></pre></td></tr></table></figure>
+<h3 id="play-runsupport-Reloader"><a href="#play-runsupport-Reloader" class="headerlink" title="play.runsupport.Reloader"></a>play.runsupport.Reloader</h3><p>通过反射启动play应用，将Reloader自身作为参数传入。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">[<span class="type">Line</span> <span class="number">203</span><span class="number">-212</span>: <span class="type">Reloader</span>#startDevMode]</div><div class="line"><span class="keyword">val</span> server = &#123;</div><div class="line">    <span class="keyword">val</span> mainClass = applicationLoader.loadClass(mainClassName)</div><div class="line">    <span class="keyword">if</span> (httpPort.isDefined) &#123;</div><div class="line">        <span class="keyword">val</span> mainDev = mainClass.getMethod(<span class="string">"mainDevHttpMode"</span>, classOf[<span class="type">BuildLink</span>], classOf[<span class="type">BuildDocHandler</span>], classOf[<span class="type">Int</span>], classOf[<span class="type">String</span>])</div><div class="line">        mainDev.invoke(<span class="literal">null</span>, reloader, buildDocHandler, httpPort.get: java.lang.<span class="type">Integer</span>, httpAddress).asInstanceOf[play.core.server.<span class="type">ServerWithStop</span>]</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        <span class="keyword">val</span> mainDev = mainClass.getMethod(<span class="string">"mainDevOnlyHttpsMode"</span>, classOf[<span class="type">BuildLink</span>], classOf[<span class="type">BuildDocHandler</span>], classOf[<span class="type">Int</span>], classOf[<span class="type">String</span>])</div><div class="line">        mainDev.invoke(<span class="literal">null</span>, reloader, buildDocHandler, httpsPort.get: java.lang.<span class="type">Integer</span>, httpAddress).asInstanceOf[play.core.server.<span class="type">ServerWithStop</span>]</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="play-core-server-DevServerStart"><a href="#play-core-server-DevServerStart" class="headerlink" title="play.core.server.DevServerStart"></a>play.core.server.DevServerStart</h3><p>从注释可以清楚的看到stop-and-start的重启逻辑。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div></pre></td><td class="code"><pre><div class="line">[<span class="type">Line</span> <span class="number">113</span><span class="number">-180</span>: <span class="type">DevServerStart</span>#mainDev]</div><div class="line"><span class="keyword">val</span> reloaded = buildLink.reload <span class="keyword">match</span> &#123;</div><div class="line">    <span class="keyword">case</span> <span class="type">NonFatal</span>(t) =&gt; <span class="type">Failure</span>(t)</div><div class="line">    <span class="keyword">case</span> cl:</div><div class="line">        <span class="type">ClassLoader</span> =&gt; <span class="type">Success</span>(<span class="type">Some</span>(cl))</div><div class="line">    <span class="keyword">case</span> <span class="literal">null</span> =&gt; <span class="type">Success</span>(<span class="type">None</span>)</div><div class="line">&#125;</div><div class="line"></div><div class="line">reloaded.flatMap &#123;</div><div class="line">    maybeClassLoader =&gt;</div><div class="line"></div><div class="line">        <span class="keyword">val</span> maybeApplication: <span class="type">Option</span>[<span class="type">Try</span>[<span class="type">Application</span>]] = maybeClassLoader.map &#123;</div><div class="line">            projectClassloader =&gt;</div><div class="line">                <span class="keyword">try</span> &#123;</div><div class="line"></div><div class="line">                    <span class="keyword">if</span> (lastState.isSuccess) &#123;</div><div class="line">                        println()</div><div class="line">                        println(play.utils.<span class="type">Colors</span>.magenta(<span class="string">"--- (RELOAD) ---"</span>))</div><div class="line">                        println()</div><div class="line">                    &#125;</div><div class="line"></div><div class="line">                    <span class="keyword">val</span> reloadable = <span class="keyword">this</span></div><div class="line"></div><div class="line">                    <span class="comment">// First, stop the old application if it exists</span></div><div class="line">                    lastState.foreach(<span class="type">Play</span>.stop)</div><div class="line"></div><div class="line">                    <span class="comment">// Create the new environment</span></div><div class="line">                    <span class="keyword">val</span> environment = <span class="type">Environment</span>(path, projectClassloader, <span class="type">Mode</span>.<span class="type">Dev</span>)</div><div class="line">                    <span class="keyword">val</span> sourceMapper = <span class="keyword">new</span> <span class="type">SourceMapper</span> &#123;</div><div class="line">                        <span class="function"><span class="keyword">def</span> <span class="title">sourceOf</span></span>(className: <span class="type">String</span>, line: <span class="type">Option</span>[<span class="type">Int</span>]) = &#123;</div><div class="line">                            <span class="type">Option</span>(buildLink.findSource(className, line.map(_.asInstanceOf[java.lang.<span class="type">Integer</span>]).orNull)).flatMap &#123;</div><div class="line">                                <span class="keyword">case</span> <span class="type">Array</span>(file: java.io.<span class="type">File</span>, <span class="literal">null</span>) =&gt; <span class="type">Some</span>((file, <span class="type">None</span>))</div><div class="line">                                <span class="keyword">case</span> <span class="type">Array</span>(file: java.io.<span class="type">File</span>, line: java.lang.<span class="type">Integer</span>) =&gt; <span class="type">Some</span>((file, <span class="type">Some</span>(line)))</div><div class="line">                                <span class="keyword">case</span> _ =&gt; <span class="type">None</span></div><div class="line">                            &#125;</div><div class="line">                        &#125;</div><div class="line">                    &#125;</div><div class="line"></div><div class="line">                    <span class="keyword">val</span> webCommands = <span class="keyword">new</span> <span class="type">DefaultWebCommands</span></div><div class="line">                    currentWebCommands = <span class="type">Some</span>(webCommands)</div><div class="line"></div><div class="line">                    <span class="keyword">val</span> newApplication = <span class="type">Threads</span>.withContextClassLoader(projectClassloader) &#123;</div><div class="line">                        <span class="keyword">val</span> context = <span class="type">ApplicationLoader</span>.createContext(environment, dirAndDevSettings, <span class="type">Some</span>(sourceMapper), webCommands)</div><div class="line">                        <span class="keyword">val</span> loader = <span class="type">ApplicationLoader</span>(context)</div><div class="line">                        loader.load(context)</div><div class="line">                    &#125;</div><div class="line"></div><div class="line">                    <span class="type">Play</span>.start(newApplication)</div><div class="line"></div><div class="line">                    <span class="type">Success</span>(newApplication)</div><div class="line">                &#125; <span class="keyword">catch</span> &#123;</div><div class="line">                    <span class="keyword">case</span> e:</div><div class="line">                        <span class="type">PlayException</span> =&gt; &#123;</div><div class="line">                            lastState = <span class="type">Failure</span>(e)</div><div class="line">                            lastState</div><div class="line">                        &#125;</div><div class="line">                    <span class="keyword">case</span> <span class="type">NonFatal</span>(e) =&gt; &#123;</div><div class="line">                        lastState = <span class="type">Failure</span>(<span class="type">UnexpectedException</span>(unexpected = <span class="type">Some</span>(e)))</div><div class="line">                        lastState</div><div class="line">                    &#125;</div><div class="line">                    <span class="keyword">case</span> e:</div><div class="line">                        <span class="type">LinkageError</span> =&gt; &#123;</div><div class="line">                            lastState = <span class="type">Failure</span>(<span class="type">UnexpectedException</span>(unexpected = <span class="type">Some</span>(e)))</div><div class="line">                            lastState</div><div class="line">                        &#125;</div><div class="line">                &#125;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">    maybeApplication.flatMap(_.toOption).foreach &#123;</div><div class="line">        app =&gt;</div><div class="line">            lastState = <span class="type">Success</span>(app)</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    maybeApplication.getOrElse(lastState)</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="4-Gotcha"><a href="#4-Gotcha" class="headerlink" title="4. Gotcha"></a>4. Gotcha</h2><p>上述的实现看上去并不复杂，那为什么老牌的Tomcat，JBoss容器却始终没有提供类似的机制呢？原因很简单，Play是stateless的，而其余的不是。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="http://jto.github.io/articles/play_anatomy_part2_sbt/" target="_blank" rel="external">http://jto.github.io/articles/play_anatomy_part2_sbt/</a></li>
+</ul>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/backend/play-hotdeploy/#disqus_thread</comments>
     </item>
     
   </channel>
