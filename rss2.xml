@@ -8,8 +8,70 @@
     <atom:link href="/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description></description>
-    <pubDate>Wed, 23 Nov 2016 16:34:58 GMT</pubDate>
+    <pubDate>Sun, 27 Nov 2016 14:07:59 GMT</pubDate>
     <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>微服务化改造系列之三：配置中心</title>
+      <link>http://emacoo.cn/arch/microservice-config/</link>
+      <guid>http://emacoo.cn/arch/microservice-config/</guid>
+      <pubDate>Sat, 26 Nov 2016 16:00:00 GMT</pubDate>
+      <description>
+      
+        &lt;blockquote&gt;
+&lt;p&gt;前情概要：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;http://emacoo.cn/arch/microservice-overview&quot;&gt;微服务化改造系列之一：总览&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;http://emacoo.c
+      
+      </description>
+      
+      <content:encoded><![CDATA[<blockquote>
+<p>前情概要：</p>
+<ul>
+<li><a href="http://emacoo.cn/arch/microservice-overview">微服务化改造系列之一：总览</a></li>
+<li><a href="http://emacoo.cn/arch/microservice-registry-center/">微服务化改造系列之二：服务注册中心</a></li>
+</ul>
+</blockquote>
+<h2 id="配置中心概述"><a href="#配置中心概述" class="headerlink" title="配置中心概述"></a>配置中心概述</h2><p>这篇文章是微服务化改造系列的第三篇，主题是配置中心。上一篇我们谈到服务注册中心，即通过提供某种注册和发现的机制，解决服务互通的问题。那么问题来了，一个服务如何知道服务注册中心的地址呢？这就涉及到服务配置了。我们知道，大至一个PaaS平台，小至一个缓存框架，一般都依赖于特定的配置以正常提供服务，微服务也不例外。</p>
+<h3 id="配置分类"><a href="#配置分类" class="headerlink" title="配置分类"></a>配置分类</h3><ul>
+<li>按配置的来源划分，主要有源代码（俗称hard-code），文件，数据库和远程调用。</li>
+<li>按配置的适用环境划分，可分为开发环境，测试环境，预发布环境，生产环境等。</li>
+<li>按配置的集成阶段划分，可分为编译时，打包时和运行时。编译时，最常见的有两种，一是源代码级的配置，二是把配置文件和源代码一起提交到代码仓库中。打包时，即在应用打包阶段通过某种方式将配置（一般是文件形式）打入最终的应用包中。运行时，是指应用启动前并不知道具体的配置，而是在启动时，先从本地或者远程获取配置，然后再正常启动。</li>
+<li>按配置的加载方式划分，可分为单次加载型配置和动态加载型配置。</li>
+</ul>
+<h3 id="演变"><a href="#演变" class="headerlink" title="演变"></a>演变</h3><p>随着业务复杂度的上升和技术架构的演变，对应用的配置方式也提出了越来越高的要求。一个典型的演变过程往往是这样的，起初所有配置跟源代码一起放在代码仓库中；之后出于安全性的考虑，将配置文件从代码仓库中分离出来，或者放在CI服务器上通过打包脚本打入应用包中，或者直接放到运行应用的服务器的特定目录下，剩下的非文件形式的关键配置则存入数据库中。上述这种方式，在单体应用阶段非常常见，也往往可以运行的很好，但到了微服务阶段，面对爆发式增长的应用数量和服务器数量，就显得无能为力了。这时，就轮到配置中心大显身手了。那什么是配置中心？简单来说，就是一种统一管理各种应用配置的基础服务组件。</p>
+<h2 id="可选框架"><a href="#可选框架" class="headerlink" title="可选框架"></a>可选框架</h2><p>选型一个合格的配置中心，至少需要满足如下4个核心需求：</p>
+<ul>
+<li>非开发环境下应用配置的保密性，避免将关键配置写入源代码</li>
+<li>不同部署环境下应用配置的隔离性，比如非生产环境的配置不能用于生产环境</li>
+<li>同一部署环境下的服务器应用配置的一致性，即所有服务器使用同一份配置</li>
+<li>分布式环境下应用配置的可管理性，即提供远程管理配置的能力</li>
+</ul>
+<p>现在开源社区主流的配置中心框架有Spring Cloud Config和disconf，两者都满足了上述4个核心需求，但又有所区别。</p>
+<h3 id="Spring-Cloud-Config"><a href="#Spring-Cloud-Config" class="headerlink" title="Spring Cloud Config"></a>Spring Cloud Config</h3><p><img src="spring-cloud-config.png" alt=""></p>
+<p><a href="http://cloud.spring.io/spring-cloud-static/spring-cloud.html#_spring_cloud_config" target="_blank" rel="external">Spring Cloud Config</a>可以说是一个为Spring量身定做的轻量级配置中心，巧妙的将应用运行环境映射为profile，应用版本映射为label。在服务端，基于特定的外部系统（Git、文件系统或者Vault）存储和管理应用配置；在客户端，利用强大的Spring配置系统，在运行时加载应用配置。</p>
+<h3 id="disconf"><a href="#disconf" class="headerlink" title="disconf"></a>disconf</h3><p><img src="disconf.jpg" alt=""></p>
+<p><a href="http://disconf.readthedocs.io/zh_CN/latest/index.html" target="_blank" rel="external">disconf</a>是前百度资深研发工程师廖绮绮的开源作品。在服务端，提供了完善的操作界面管理各种运行环境，应用和配置文件；在客户端，深度集成Spring，通过Spring AOP实现应用配置的自动加载和刷新。</p>
+<h2 id="方案选型"><a href="#方案选型" class="headerlink" title="方案选型"></a>方案选型</h2><p>不管是Spring Cloud Config还是disconf，默认提供的客户端都深度绑定了Spring框架，这对非Spring应用而言无疑增加了集成成本，即便它们都提供了获取应用配置的API。最终我们还是选用了微服务化改造之前自研的Matrix作为配置中心，一方面，可以保持新老系统使用同一套配置服务，降低维护成本，另一方面，在满足4个核心需求的前提下，Matrix还提供了一些独有的能力。</p>
+<ul>
+<li>分离配置文件和配置项。对于配置文件，通过各类配套打包插件（sbt, maven, gradle），在打包时将配置文件打入应用包中，同时最小化对CI的侵入性；对于配置项，提供SDK，帮助应用从服务端获取配置项，同时支持简单的缓存机制。</li>
+<li>增加应用版本维度，即对于同一应用，可以在服务端针对不同版本或版本区间维护不同的应用配置。</li>
+<li>应用配置的版本化支持，类似于Git，可以将任一应用配置回退到任一历史版本。</li>
+</ul>
+<p>进一步信息可参考我之前写的Matrix<a href="https://www.zybuluo.com/emac/note/241756" target="_blank" rel="external">设计文档</a>。</p>
+<p><img src="matrix.png" alt=""></p>
+<p><em>Matrix架构图</em></p>
+<p>下一篇我将给大家介绍微服务架构的另一个基础组件——授权中心，敬请期待！</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="http://cloud.spring.io/spring-cloud-static/spring-cloud.html#_spring_cloud_config" target="_blank" rel="external">Spring Cloud Config</a></li>
+<li><a href="http://disconf.readthedocs.io/zh_CN/latest/index.html" target="_blank" rel="external">disconf</a></li>
+<li><a href="https://www.zybuluo.com/emac/note/241756" target="_blank" rel="external">Matrix</a></li>
+</ul>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/arch/microservice-config/#disqus_thread</comments>
+    </item>
     
     <item>
       <title>微服务化改造系列之二：服务注册中心</title>
@@ -19,14 +81,14 @@
       <description>
       
         &lt;blockquote&gt;
-&lt;p&gt;前情概要：&lt;a href=&quot;http://emacoo.cn/blog/microservice-overview&quot;&gt;微服务化改造系列之一：总览&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;前情概要：&lt;a href=&quot;http://emacoo.cn/arch/microservice-overview&quot;&gt;微服务化改造系列之一：总览&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;h2 id=&quot;服务注册中心概述&quot;&gt;&lt;a href=&quot;#服
       
       </description>
       
       <content:encoded><![CDATA[<blockquote>
-<p>前情概要：<a href="http://emacoo.cn/blog/microservice-overview">微服务化改造系列之一：总览</a></p>
+<p>前情概要：<a href="http://emacoo.cn/arch/microservice-overview">微服务化改造系列之一：总览</a></p>
 </blockquote>
 <h2 id="服务注册中心概述"><a href="#服务注册中心概述" class="headerlink" title="服务注册中心概述"></a>服务注册中心概述</h2><p>这篇文章是微服务化改造系列的第二篇，主题是服务注册中心。作为微服务架构最基础也是最重要的组件之一，服务注册中心本质上是为了解耦服务提供者和服务消费者。对于任何一个微服务，原则上都应存在或者支持多个提供者，这是由微服务的分布式属性决定的。更进一步，为了支持弹性扩缩容特性，一个微服务的提供者的数量和分布往往是动态变化的，也是无法预先确定的。因此，原本在单体应用阶段常用的静态LB机制就不再适用了，需要引入额外的组件来管理微服务提供者的注册与发现，而这个组件就是服务注册中心。</p>
 <p>设计或者选型一个服务注册中心，首先要考虑的就是服务注册与发现机制。纵观当下各种主流的服务注册中心解决方案，大致可归为三类：</p>
@@ -52,7 +114,7 @@
 <p>SmartStack可以说是三种方案中最复杂的，涉及了ZooKeeper、HAProxy、Nerve和Synapse四种异构组件，对运维提出了很高的要求。它最大的好处是对应用零侵入，且适用于任意类型的应用。</p>
 <h3 id="Consul"><a href="#Consul" class="headerlink" title="Consul"></a>Consul</h3><p><img src="consul-standard.png" alt=""></p>
 <p>Consul本质上属于应用外的注册方式，但可以通过SDK简化注册流程。而服务发现恰好相反，默认依赖于SDK，但可以通过Consul Template（下文会提到）去除SDK依赖。</p>
-<h2 id="方案"><a href="#方案" class="headerlink" title="方案"></a>方案</h2><p>最终我们选择了Consul作为服务注册中心的实现方案，主要原因有两点：</p>
+<h2 id="方案选型"><a href="#方案选型" class="headerlink" title="方案选型"></a>方案选型</h2><p>最终我们选择了Consul作为服务注册中心的实现方案，主要原因有两点：</p>
 <ol>
 <li>最小化对已有应用的侵入性，这也是贯穿我们整个微服务化改造的原则之一</li>
 <li>降低运维的复杂度，Consul Agent既可以运行在服务器模式，又可以运行在客户端模式</li>
@@ -111,13 +173,13 @@
 <p>另一方面，由于采用了分布式架构，微服务无法再简单的通过数据库事务来保证强一致性，而是通过消息中间件或者某种事务补偿机制来保证最终一致性，比如微信朋友圈的点赞，淘宝订单的物流状态。其次，在微服务阶段，随着应用数量的激增，一次发布往往涉及多个应用，加上异构性带来的部署方式的多样性，对团队的运维水平尤其是自动化水平提出了更高的要求，运维和开发的边界进一步模糊。</p>
 <p><img src="http://martinfowler.com/bliki/images/microservicePrerequisites/sketch.png" alt=""></p>
 <h3 id="领域知识"><a href="#领域知识" class="headerlink" title="领域知识"></a>领域知识</h3><p>除了组织架构和技术取舍，领域知识是另一个非常重要的决策因素。对于不熟悉的业务领域，很难第一次就把各个微服务的边界和接口定义正确，一旦开始开发，重构成本就会非常可观。反过来说，当对领域知识有了一定的积累，再重构一个单体应用就会容易的多。</p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>综上所述，虽然微服务看上去很美，但在决定采用微服务架构之前，不仅要仔细考量团队的技术水平（包括知识结构，理论深度，经验积累和技术氛围），还应综合考虑项目的时间范围，领域知识的熟悉程度，以及所在组织的规模架构。除非这些前提条件都满足，否则单体应用是更适合的选择，就像Fowler<a href="http://martinfowler.com/bliki/MonolithFirst.html" target="_blank" rel="external">建议</a>的那样。</p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>综上所述，虽然微服务看上去很美，但在决定采用微服务架构之前，不仅要仔细考量团队的技术水平（包括知识结构，理论深度，经验积累和技术氛围），还应综合考虑项目的时间范围，领域知识的熟悉程度，以及所在组织的规模架构。除非这些前提条件都满足，否则单体应用是更适合的选择，就像Fowler<a href="http://martinfowler.com/bliki/MonolithFirst.html" target="_blank" rel="external">建议</a>的那样。</p>
 <p><img src="http://martinfowler.com/bliki/images/microservice-verdict/path.png" alt=""></p>
 <h2 id="3-微服务化总览"><a href="#3-微服务化总览" class="headerlink" title="3 微服务化总览"></a>3 微服务化总览</h2><p><img src="microservice.png" alt=""></p>
 <p>上图是XR微服务化第一阶段的整体架构图。可以看到，一些支撑微服务的必要组件都已包含其中：</p>
 <ul>
 <li>服务注册中心：所有服务注册到Consul集群，集成Nginx实现负载均衡，使用Hystrix实现简单的服务降级和熔断机制</li>
-<li>CI/CD：利用<a href="http://emacoo.cn/blog/jenkins-pipeline-tips">Jenkins Pipeline</a>实现<a href="http://emacoo.cn/blog/ci-cd-hot-deployment">不停机发布</a></li>
+<li>CI/CD：利用<a href="http://emacoo.cn/devops/jenkins-pipeline-tips">Jenkins Pipeline</a>实现<a href="http://emacoo.cn/devops/ci-cd-hot-deployment">不停机发布</a></li>
 <li>日志平台：扩展ELK加上Redis缓存</li>
 <li>配置中心：使用自研的<a href="https://zybuluo.com/emac/note/241756" target="_blank" rel="external">Matrix</a>系统，最小化对已有应用的侵入性，保证异构系统的兼容性</li>
 <li>授权中心：基于Spring Security OAuth，同时支持SSO</li>
@@ -204,11 +266,11 @@
       
       </description>
       
-      <content:encoded><![CDATA[<h2 id="何为不停机发布？"><a href="#何为不停机发布？" class="headerlink" title="何为不停机发布？"></a>何为不停机发布？</h2><p>本文所说的不停机发布，是指在<strong>不停止对外服务</strong>的前提下完成应用的更新。与<a href="http://emacoo.cn/blog/play-hotdeploy">热部署</a>的区别在于，热部署关注于<strong>应用</strong>层面并且以<strong>不重启应用</strong>为前提，而不停机发布则关注于<strong>服务</strong>层面。随着摩尔定律逐渐逼近极限和多核时代的到来，分布式应用已经成为事实上的主流。下文首先给出一种通用的适用于分布式应用环境的不停机发布方式，然后再介绍Master/Worker这种常见的适用于单机应用的不停机发布方式。</p>
+      <content:encoded><![CDATA[<h2 id="何为不停机发布？"><a href="#何为不停机发布？" class="headerlink" title="何为不停机发布？"></a>何为不停机发布？</h2><p>本文所说的不停机发布，是指在<strong>不停止对外服务</strong>的前提下完成应用的更新。与<a href="http://emacoo.cn/coding/play-hotdeploy">热部署</a>的区别在于，热部署关注于<strong>应用</strong>层面并且以<strong>不重启应用</strong>为前提，而不停机发布则关注于<strong>服务</strong>层面。随着摩尔定律逐渐逼近极限和多核时代的到来，分布式应用已经成为事实上的主流。下文首先给出一种通用的适用于分布式应用环境的不停机发布方式，然后再介绍Master/Worker这种常见的适用于单机应用的不停机发布方式。</p>
 <h2 id="Cluster模式"><a href="#Cluster模式" class="headerlink" title="Cluster模式"></a>Cluster模式</h2><p>对于运行于集群环境的分布式应用，一般在应用之上都有一层负载均衡（LB）。如果在发布过程中，在更新任一节点（也可以是一组节点）前先关闭该节点对应的负载，更新完再打开负载，即可实现整体服务的不停机发布。在此基础上，为了保证服务的稳定性，可以加上备机的支持，即更新某一节点时，先挂上备机，更新完再卸下，依次轮换更新完所有节点后最后再升级备机，如下图所示：</p>
 <p><img src="http://static.zybuluo.com/emac/zijlzk2pruasmrbmbaz8eev1/QQ20160405-3.png" alt=""></p>
 <p><em>* 完整设计可以参考我写的另一篇<a href="https://www.zybuluo.com/emac/note/330205" target="_blank" rel="external">文章</a></em></p>
-<p>上述发布过程其实就是一个简单的CD（Continuous Deployment）系统。作为一个参考实现，可以使用<a href="http://emacoo.cn/blog/jenkins-2-0-from-ci-to-cd">Jenkins 2.0 Pipeline</a>特性定义整个发布流程，使用<a href="https://github.com/cubicdaiya/ngx_dynamic_upstream" target="_blank" rel="external">Nginx Dynamic Upstream</a>插件操纵Nginx，然后配合脚本完成应用的启停和检测。</p>
+<p>上述发布过程其实就是一个简单的CD（Continuous Deployment）系统。作为一个参考实现，可以使用<a href="http://emacoo.cn/devops/jenkins-2-0-from-ci-to-cd">Jenkins 2.0 Pipeline</a>特性定义整个发布流程，使用<a href="https://github.com/cubicdaiya/ngx_dynamic_upstream" target="_blank" rel="external">Nginx Dynamic Upstream</a>插件操纵Nginx，然后配合脚本完成应用的启停和检测。</p>
 <p><img src="QQ20160609-0.png" alt=""></p>
 <h2 id="Master-Worker模式"><a href="#Master-Worker模式" class="headerlink" title="Master/Worker模式"></a>Master/Worker模式</h2><p>对于单机应用，由于不存在LB，一般由应用容器实现不停机发布特性，最常见是Master/Worker模式。容器中常驻一个master进程和多个work进程，master进程只负责加载程序和分发请求，由fork出来的worker进程完成具体工作。当容器收到更新应用的信号时，master进程重新加载更新后的程序，然后fork新的worker进程处理新的请求，而老的worker进程在处理完当前请求后就自动销毁。Ruby的<a href="https://github.com/blog/517-unicorn" target="_blank" rel="external">Unicorn</a>，PHP的<a href="http://php-fpm.org/about/" target="_blank" rel="external">FPM</a>都是采用了这套机制。</p>
 <h2 id="延伸阅读"><a href="#延伸阅读" class="headerlink" title="延伸阅读"></a>延伸阅读</h2><p>不同于Master/Worker模式，erlang采用了另一种独特的方式实现了不停机发布。</p>
@@ -375,11 +437,11 @@
       <pubDate>Sat, 26 Mar 2016 16:00:00 GMT</pubDate>
       <description>
       
-        &lt;h2 id=&quot;单应用多数据库的事务管理&quot;&gt;&lt;a href=&quot;#单应用多数据库的事务管理&quot; class=&quot;headerlink&quot; title=&quot;单应用多数据库的事务管理&quot;&gt;&lt;/a&gt;单应用多数据库的事务管理&lt;/h2&gt;&lt;p&gt;&lt;a href=&quot;http://emacoo.cn/blog
+        &lt;h2 id=&quot;单应用多数据库的事务管理&quot;&gt;&lt;a href=&quot;#单应用多数据库的事务管理&quot; class=&quot;headerlink&quot; title=&quot;单应用多数据库的事务管理&quot;&gt;&lt;/a&gt;单应用多数据库的事务管理&lt;/h2&gt;&lt;p&gt;&lt;a href=&quot;http://emacoo.cn/back
       
       </description>
       
-      <content:encoded><![CDATA[<h2 id="单应用多数据库的事务管理"><a href="#单应用多数据库的事务管理" class="headerlink" title="单应用多数据库的事务管理"></a>单应用多数据库的事务管理</h2><p><a href="http://emacoo.cn/blog/spring-boot-multi-db">上篇</a>讲到单应用多数据库的配置，这次我们聊聊单应用多数据库的事务管理。首先我们来了解一下事务。</p>
+      <content:encoded><![CDATA[<h2 id="单应用多数据库的事务管理"><a href="#单应用多数据库的事务管理" class="headerlink" title="单应用多数据库的事务管理"></a>单应用多数据库的事务管理</h2><p><a href="http://emacoo.cn/backend/spring-boot-multi-db">上篇</a>讲到单应用多数据库的配置，这次我们聊聊单应用多数据库的事务管理。首先我们来了解一下事务。</p>
 <h2 id="什么是数据库事务？"><a href="#什么是数据库事务？" class="headerlink" title="什么是数据库事务？"></a>什么是数据库事务？</h2><blockquote>
 <p>数据库事务(Database Transaction) ，是指作为单个逻辑工作单元执行的一系列操作，要么完全地执行，要么完全地不执行。事务处理可以确保除非事务性单元内的所有操作都成功完成，否则不会永久更新面向数据的资源。一个逻辑工作单元要成为事务，必须满足所谓的ACID（原子性、一致性、隔离性和持久性）属性。<br><a href="http://baike.baidu.com/view/1298364.htm" target="_blank" rel="external">http://baike.baidu.com/view/1298364.htm</a></p>
 </blockquote>

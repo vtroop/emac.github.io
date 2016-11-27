@@ -80,7 +80,7 @@
     <div class="picture-container">
       
     </div>
-    <h2 id="单应用多数据库的事务管理"><a href="#单应用多数据库的事务管理" class="headerlink" title="单应用多数据库的事务管理"></a>单应用多数据库的事务管理</h2><p><a href="http://emacoo.cn/blog/spring-boot-multi-db">上篇</a>讲到单应用多数据库的配置，这次我们聊聊单应用多数据库的事务管理。首先我们来了解一下事务。</p>
+    <h2 id="单应用多数据库的事务管理"><a href="#单应用多数据库的事务管理" class="headerlink" title="单应用多数据库的事务管理"></a>单应用多数据库的事务管理</h2><p><a href="http://emacoo.cn/backend/spring-boot-multi-db">上篇</a>讲到单应用多数据库的配置，这次我们聊聊单应用多数据库的事务管理。首先我们来了解一下事务。</p>
 <h2 id="什么是数据库事务？"><a href="#什么是数据库事务？" class="headerlink" title="什么是数据库事务？"></a>什么是数据库事务？</h2><blockquote>
 <p>数据库事务(Database Transaction) ，是指作为单个逻辑工作单元执行的一系列操作，要么完全地执行，要么完全地不执行。事务处理可以确保除非事务性单元内的所有操作都成功完成，否则不会永久更新面向数据的资源。一个逻辑工作单元要成为事务，必须满足所谓的ACID（原子性、一致性、隔离性和持久性）属性。<br><a href="http://baike.baidu.com/view/1298364.htm" target="_blank" rel="external">http://baike.baidu.com/view/1298364.htm</a></p>
 </blockquote>

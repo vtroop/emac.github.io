@@ -78,11 +78,11 @@
     <div class="picture-container">
       
     </div>
-    <h2 id="何为不停机发布？"><a href="#何为不停机发布？" class="headerlink" title="何为不停机发布？"></a>何为不停机发布？</h2><p>本文所说的不停机发布，是指在<strong>不停止对外服务</strong>的前提下完成应用的更新。与<a href="http://emacoo.cn/blog/play-hotdeploy">热部署</a>的区别在于，热部署关注于<strong>应用</strong>层面并且以<strong>不重启应用</strong>为前提，而不停机发布则关注于<strong>服务</strong>层面。随着摩尔定律逐渐逼近极限和多核时代的到来，分布式应用已经成为事实上的主流。下文首先给出一种通用的适用于分布式应用环境的不停机发布方式，然后再介绍Master/Worker这种常见的适用于单机应用的不停机发布方式。</p>
+    <h2 id="何为不停机发布？"><a href="#何为不停机发布？" class="headerlink" title="何为不停机发布？"></a>何为不停机发布？</h2><p>本文所说的不停机发布，是指在<strong>不停止对外服务</strong>的前提下完成应用的更新。与<a href="http://emacoo.cn/coding/play-hotdeploy">热部署</a>的区别在于，热部署关注于<strong>应用</strong>层面并且以<strong>不重启应用</strong>为前提，而不停机发布则关注于<strong>服务</strong>层面。随着摩尔定律逐渐逼近极限和多核时代的到来，分布式应用已经成为事实上的主流。下文首先给出一种通用的适用于分布式应用环境的不停机发布方式，然后再介绍Master/Worker这种常见的适用于单机应用的不停机发布方式。</p>
 <h2 id="Cluster模式"><a href="#Cluster模式" class="headerlink" title="Cluster模式"></a>Cluster模式</h2><p>对于运行于集群环境的分布式应用，一般在应用之上都有一层负载均衡（LB）。如果在发布过程中，在更新任一节点（也可以是一组节点）前先关闭该节点对应的负载，更新完再打开负载，即可实现整体服务的不停机发布。在此基础上，为了保证服务的稳定性，可以加上备机的支持，即更新某一节点时，先挂上备机，更新完再卸下，依次轮换更新完所有节点后最后再升级备机，如下图所示：</p>
 <p><img src="http://static.zybuluo.com/emac/zijlzk2pruasmrbmbaz8eev1/QQ20160405-3.png" alt=""></p>
 <p><em>* 完整设计可以参考我写的另一篇<a href="https://www.zybuluo.com/emac/note/330205" target="_blank" rel="external">文章</a></em></p>
-<p>上述发布过程其实就是一个简单的CD（Continuous Deployment）系统。作为一个参考实现，可以使用<a href="http://emacoo.cn/blog/jenkins-2-0-from-ci-to-cd">Jenkins 2.0 Pipeline</a>特性定义整个发布流程，使用<a href="https://github.com/cubicdaiya/ngx_dynamic_upstream" target="_blank" rel="external">Nginx Dynamic Upstream</a>插件操纵Nginx，然后配合脚本完成应用的启停和检测。</p>
+<p>上述发布过程其实就是一个简单的CD（Continuous Deployment）系统。作为一个参考实现，可以使用<a href="http://emacoo.cn/devops/jenkins-2-0-from-ci-to-cd">Jenkins 2.0 Pipeline</a>特性定义整个发布流程，使用<a href="https://github.com/cubicdaiya/ngx_dynamic_upstream" target="_blank" rel="external">Nginx Dynamic Upstream</a>插件操纵Nginx，然后配合脚本完成应用的启停和检测。</p>
 <p><img src="QQ20160609-0.png" alt=""></p>
 <h2 id="Master-Worker模式"><a href="#Master-Worker模式" class="headerlink" title="Master/Worker模式"></a>Master/Worker模式</h2><p>对于单机应用，由于不存在LB，一般由应用容器实现不停机发布特性，最常见是Master/Worker模式。容器中常驻一个master进程和多个work进程，master进程只负责加载程序和分发请求，由fork出来的worker进程完成具体工作。当容器收到更新应用的信号时，master进程重新加载更新后的程序，然后fork新的worker进程处理新的请求，而老的worker进程在处理完当前请求后就自动销毁。Ruby的<a href="https://github.com/blog/517-unicorn" target="_blank" rel="external">Unicorn</a>，PHP的<a href="http://php-fpm.org/about/" target="_blank" rel="external">FPM</a>都是采用了这套机制。</p>
 <h2 id="延伸阅读"><a href="#延伸阅读" class="headerlink" title="延伸阅读"></a>延伸阅读</h2><p>不同于Master/Worker模式，erlang采用了另一种独特的方式实现了不停机发布。</p>

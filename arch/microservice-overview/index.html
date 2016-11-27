@@ -105,13 +105,13 @@
 <p>另一方面，由于采用了分布式架构，微服务无法再简单的通过数据库事务来保证强一致性，而是通过消息中间件或者某种事务补偿机制来保证最终一致性，比如微信朋友圈的点赞，淘宝订单的物流状态。其次，在微服务阶段，随着应用数量的激增，一次发布往往涉及多个应用，加上异构性带来的部署方式的多样性，对团队的运维水平尤其是自动化水平提出了更高的要求，运维和开发的边界进一步模糊。</p>
 <p><img src="http://martinfowler.com/bliki/images/microservicePrerequisites/sketch.png" alt=""></p>
 <h3 id="领域知识"><a href="#领域知识" class="headerlink" title="领域知识"></a>领域知识</h3><p>除了组织架构和技术取舍，领域知识是另一个非常重要的决策因素。对于不熟悉的业务领域，很难第一次就把各个微服务的边界和接口定义正确，一旦开始开发，重构成本就会非常可观。反过来说，当对领域知识有了一定的积累，再重构一个单体应用就会容易的多。</p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>综上所述，虽然微服务看上去很美，但在决定采用微服务架构之前，不仅要仔细考量团队的技术水平（包括知识结构，理论深度，经验积累和技术氛围），还应综合考虑项目的时间范围，领域知识的熟悉程度，以及所在组织的规模架构。除非这些前提条件都满足，否则单体应用是更适合的选择，就像Fowler<a href="http://martinfowler.com/bliki/MonolithFirst.html" target="_blank" rel="external">建议</a>的那样。</p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>综上所述，虽然微服务看上去很美，但在决定采用微服务架构之前，不仅要仔细考量团队的技术水平（包括知识结构，理论深度，经验积累和技术氛围），还应综合考虑项目的时间范围，领域知识的熟悉程度，以及所在组织的规模架构。除非这些前提条件都满足，否则单体应用是更适合的选择，就像Fowler<a href="http://martinfowler.com/bliki/MonolithFirst.html" target="_blank" rel="external">建议</a>的那样。</p>
 <p><img src="http://martinfowler.com/bliki/images/microservice-verdict/path.png" alt=""></p>
 <h2 id="3-微服务化总览"><a href="#3-微服务化总览" class="headerlink" title="3 微服务化总览"></a>3 微服务化总览</h2><p><img src="microservice.png" alt=""></p>
 <p>上图是XR微服务化第一阶段的整体架构图。可以看到，一些支撑微服务的必要组件都已包含其中：</p>
 <ul>
 <li>服务注册中心：所有服务注册到Consul集群，集成Nginx实现负载均衡，使用Hystrix实现简单的服务降级和熔断机制</li>
-<li>CI/CD：利用<a href="http://emacoo.cn/blog/jenkins-pipeline-tips">Jenkins Pipeline</a>实现<a href="http://emacoo.cn/blog/ci-cd-hot-deployment">不停机发布</a></li>
+<li>CI/CD：利用<a href="http://emacoo.cn/devops/jenkins-pipeline-tips">Jenkins Pipeline</a>实现<a href="http://emacoo.cn/devops/ci-cd-hot-deployment">不停机发布</a></li>
 <li>日志平台：扩展ELK加上Redis缓存</li>
 <li>配置中心：使用自研的<a href="https://zybuluo.com/emac/note/241756" target="_blank" rel="external">Matrix</a>系统，最小化对已有应用的侵入性，保证异构系统的兼容性</li>
 <li>授权中心：基于Spring Security OAuth，同时支持SSO</li>
