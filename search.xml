@@ -4,6 +4,61 @@
   
     
     <entry>
+      <title><![CDATA[微服务化改造系列之四：授权中心]]></title>
+      <url>http://emacoo.cn/arch/microservice-oauth2/</url>
+      <content type="html"><![CDATA[<blockquote>
+<p>前情概要：</p>
+<ul>
+<li><a href="http://emacoo.cn/arch/microservice-overview">微服务化改造系列之一：总览</a></li>
+<li><a href="http://emacoo.cn/arch/microservice-registry-center/">微服务化改造系列之二：服务注册中心</a></li>
+<li><a href="http://emacoo.cn/arch/microservice-config/">微服务化改造系列之三：配置中心</a></li>
+</ul>
+</blockquote>
+<h2 id="授权中心概述"><a href="#授权中心概述" class="headerlink" title="授权中心概述"></a>授权中心概述</h2><p>这篇文章是微服务化改造系列的第四篇，主题是授权中心。有了服务注册中心和配置中心，下一步应该就可以发起服务调用了吧？Wait, 还有一个关键问题要解决。不同于单体应用内部的方法调用，服务调用存在一个服务授权的概念。打个比方，原本一家三兄弟住一屋，每次上山打猎喊一声就行，后来三兄弟分了家，再打猎就要挨家挨户敲门了。这一敲一应就是所谓的服务授权。</p>
+<p>严格来说，服务授权包含鉴权（Authentication）和授权（Authorization）两部分。鉴权解决的是调用方身份识别的问题，即敲门的是谁。授权解决的是调用是否被允许的问题，即让不让进门。两者一先一后，缺一不可。为避免歧义，如不特殊指明，下文所述授权都是宽泛意义上的授权，即包含了鉴权。</p>
+<p>常见的服务授权有三种，简单授权，协议授权和中央授权。</p>
+<ul>
+<li>简单授权：服务提供方并不进行真正的授权，而是依赖于外部环境进行自动授权，比如IP地址白名单，内网域名等。这就好比三兄弟互相留了一个后门。</li>
+<li>协议授权：服务提供方和服务调用方事先约定一个密钥，服务调用方每次发起服务调用请求时，用约定的密钥对请求内容进行加密生成鉴权头（包含调用方唯一识别ID），服务提供方收到请求后，根据鉴权头找到相应的密钥对请求进行鉴权，鉴权通过后再决定是否授权此次调用。这就好比三兄弟之间约定敲一声是大哥，敲两声是二哥，敲三声是三弟。</li>
+<li>中央授权：引入独立的授权中心，服务调用方每次发起服务调用请求时，先从授权中心获取一个授权码，然后附在原始请求上一起发给服务提供方，提供方收到请求后，先通过授权中心将授权码还原成调用方身份信息和相应的权限列表，然后决定是否授权此次调用。这就好比三兄弟每家家门口安装了一个110联网的指纹识别器，通过远程指纹识别敲门人的身份。</li>
+</ul>
+<p>一般来说，简单授权在业务规则简单、安全性要求不高的场景下用的比较多。而协议授权，比较适用于点对点或者C/S架构的服务调用场景，比如<a href="http://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html" target="_blank" rel="external">Amazon S3 API</a>。对于网状结构的微服务而言，中央授权是三种方式中最适合也是最灵活的选择：</p>
+<ol>
+<li>简化了服务提供方的实现，让提供方专注于权限设计而非实现。</li>
+<li>更重要的是提供了一套独立于服务提供方和服务调用方的授权机制，无需重新发布服务，只要在授权中心修改服务授权规则，就可以影响后续的服务调用。</li>
+</ol>
+<h3 id="OAuth"><a href="#OAuth" class="headerlink" title="OAuth"></a>OAuth</h3><p>说起具体的授权协议，很多人第一反应就是OAuth。事实上也的确如此，很多互联网公司的开放平台都是基于OAuth协议实现的，比如<a href="https://developers.google.com/identity/protocols/OAuth2" target="_blank" rel="external">Google APIs</a>, <a href="http://mp.weixin.qq.com/wiki/4/9ac2e7b1f1d22e9e57260f6553822520.html" target="_blank" rel="external">微信网页授权接口</a>。一次标准的OAuth授权过程如下：</p>
+<p><img src="oauth2.png" alt=""></p>
+<p>对应到微服务场景，服务提供方相当于上图中的Resource Server，服务调用方相当于Client，而授权中心相当于Authorization Server和Resource Owner的合体。</p>
+<p>想了解更多关于OAuth的信息，可移步<a href="http://oauthlib.readthedocs.io/en/latest/oauth2/oauth2.html" target="_blank" rel="external">OAuth2</a>或者<a href="http://www.ruanyifeng.com/blog/2014/05/oauth_2_0.html" target="_blank" rel="external">OAuth2中文版</a>。</p>
+<h3 id="Beared-Token"><a href="#Beared-Token" class="headerlink" title="Beared Token"></a>Beared Token</h3><p>在标准的OAuth授权过程中，Resource Server收到Client发来的请求后，需要到Authorization Server验证Access Token，并获取Client的进一步信息。通过OAuth 2.0版本引入中的Beared Token，我们可以省去这一次调用，将Client信息存入Access Token，并在Resource Server端完成Access Token的鉴权。主流的Beared Token有<a href="http://samltool.io/" target="_blank" rel="external">SAML</a>和<a href="https://jwt.io/introduction/" target="_blank" rel="external">JWT</a>两种格式，SAML基于XML，而JWT基于JSON。由于大多数微服务都使用JSON作为序列化格式，JWT使用的更为广泛。</p>
+<h2 id="框架选型"><a href="#框架选型" class="headerlink" title="框架选型"></a>框架选型</h2><p>在选型OAuth框架时，我主要调研了<a href="https://github.com/apereo/cas" target="_blank" rel="external">CAS</a>,<a href="http://oltu.apache.org/" target="_blank" rel="external">Apache Oltu</a>,<a href="http://projects.spring.io/spring-security-oauth/" target="_blank" rel="external">Spring Security OAuth</a>和<a href="https://github.com/OAuth-Apis/apis" target="_blank" rel="external">OAuth-Apis</a>，对比如下：</p>
+<p><img src="oauth2-frameworks.png" alt=""></p>
+<p>不考虑实际业务场景，CAS和Spring Security OAuth相对另外两种框架，无论是集成成本还是可扩展性，都有明显优势。前文提到，由于我们选用了Spring Boot作为统一的微服务实现框架，Spring Security OAuth是更自然的选择，并且维护成本相对低一些（服务端）。</p>
+<h2 id="最终方案"><a href="#最终方案" class="headerlink" title="最终方案"></a>最终方案</h2><p>最终我们基于Spring Security OAuth框架实现了自己的服务授权中心，鉴权部分做的比较简单，目前只支持私网认证。大致的服务授权流程如下：</p>
+<p><img src="oauth2-interaction.png" alt=""></p>
+<p><img src="oauth2-sequence.png" alt=""></p>
+<p>值得一提的是，除了服务调用，我们的服务授权中心还增加了SSO的支持，通过微信企业号实现各个服务后台的单点登录/登出，以后有机会再详细介绍。</p>
+<h2 id="冰山一角"><a href="#冰山一角" class="headerlink" title="冰山一角"></a>冰山一角</h2><p>至此，这个微服务化改造系列就算告一段落，等以后有了更多的积累，我会继续写下去。微服务是一个很大的话题，自Martin Fowler于<a href="http://martinfowler.com/articles/microservices.html" target="_blank" rel="external">2014年3月</a>提出以来，愈演愈热，并跟另一个话题容器化一起开创了一个全新的DevOps时代，引领了国内外大大小小各个互联网公司的技术走向，也影响了我们这一代程序员尤其是后端和运维的思维方式。从这个角度说，我写这个微服务化改造系列文章也是偶然中的必然，希望能给读过这些文章的你带来一些新的启发和思考。如果你对微服务也感兴趣或者有一些心得想跟我交流，欢迎赞赏并加好友。</p>
+<p><img src="emacoo.png" alt=""></p>
+<blockquote>
+<p>少年读书如隙中窥月，中年读书如庭中望月，老年读书如台上玩月，皆以阅历之浅深为所得之浅深耳。– 张潮 《幽梦影》</p>
+</blockquote>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="http://oauthlib.readthedocs.io/en/latest/oauth2/oauth2.html" target="_blank" rel="external">OAuth2</a> - <a href="http://www.ruanyifeng.com/blog/2014/05/oauth_2_0.html" target="_blank" rel="external">中文版</a></li>
+<li><a href="https://jwt.io/introduction/" target="_blank" rel="external">JWT</a></li>
+<li><a href="https://github.com/apereo/cas" target="_blank" rel="external">CAS</a></li>
+<li><a href="http://oltu.apache.org/" target="_blank" rel="external">Apache Oltu</a></li>
+<li><a href="https://github.com/OAuth-Apis/apis" target="_blank" rel="external">OAuth-Apis</a></li>
+<li><a href="http://projects.spring.io/spring-security-oauth/" target="_blank" rel="external">Spring Security OAuth</a></li>
+<li><a href="http://projects.spring.io/spring-security-oauth/docs/oauth2.html" target="_blank" rel="external">OAuth 2 Developers Guide</a> </li>
+<li><a href="https://blog.yorkxin.org/2013/09/30/oauth2-implementation-differences-among-famous-sites" target="_blank" rel="external">各大網站 OAuth 2.0 實作差異</a></li>
+<li>参考示例：<a href="https://github.com/spring-projects/spring-security-oauth/tree/master/samples" target="_blank" rel="external">spring-security-oauth</a></li>
+</ul>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[微服务化改造系列之三：配置中心]]></title>
       <url>http://emacoo.cn/arch/microservice-config/</url>
       <content type="html"><![CDATA[<blockquote>
@@ -21,7 +76,7 @@
 <li>按配置的加载方式划分，可分为单次加载型配置和动态加载型配置。</li>
 </ul>
 <h3 id="演变"><a href="#演变" class="headerlink" title="演变"></a>演变</h3><p>随着业务复杂度的上升和技术架构的演变，对应用的配置方式也提出了越来越高的要求。一个典型的演变过程往往是这样的，起初所有配置跟源代码一起放在代码仓库中；之后出于安全性的考虑，将配置文件从代码仓库中分离出来，或者放在CI服务器上通过打包脚本打入应用包中，或者直接放到运行应用的服务器的特定目录下，剩下的非文件形式的关键配置则存入数据库中。上述这种方式，在单体应用阶段非常常见，也往往可以运行的很好，但到了微服务阶段，面对爆发式增长的应用数量和服务器数量，就显得无能为力了。这时，就轮到配置中心大显身手了。那什么是配置中心？简单来说，就是一种统一管理各种应用配置的基础服务组件。</p>
-<h2 id="可选框架"><a href="#可选框架" class="headerlink" title="可选框架"></a>可选框架</h2><p>选型一个合格的配置中心，至少需要满足如下4个核心需求：</p>
+<h2 id="框架选型"><a href="#框架选型" class="headerlink" title="框架选型"></a>框架选型</h2><p>选型一个合格的配置中心，至少需要满足如下4个核心需求：</p>
 <ul>
 <li>非开发环境下应用配置的保密性，避免将关键配置写入源代码</li>
 <li>不同部署环境下应用配置的隔离性，比如非生产环境的配置不能用于生产环境</li>
@@ -33,7 +88,7 @@
 <p><a href="http://cloud.spring.io/spring-cloud-static/spring-cloud.html#_spring_cloud_config" target="_blank" rel="external">Spring Cloud Config</a>可以说是一个为Spring量身定做的轻量级配置中心，巧妙的将应用运行环境映射为profile，应用版本映射为label。在服务端，基于特定的外部系统（Git、文件系统或者Vault）存储和管理应用配置；在客户端，利用强大的Spring配置系统，在运行时加载应用配置。</p>
 <h3 id="disconf"><a href="#disconf" class="headerlink" title="disconf"></a>disconf</h3><p><img src="disconf.jpg" alt=""></p>
 <p><a href="http://disconf.readthedocs.io/zh_CN/latest/index.html" target="_blank" rel="external">disconf</a>是前百度资深研发工程师廖绮绮的开源作品。在服务端，提供了完善的操作界面管理各种运行环境，应用和配置文件；在客户端，深度集成Spring，通过Spring AOP实现应用配置的自动加载和刷新。</p>
-<h2 id="方案选型"><a href="#方案选型" class="headerlink" title="方案选型"></a>方案选型</h2><p>不管是Spring Cloud Config还是disconf，默认提供的客户端都深度绑定了Spring框架，这对非Spring应用而言无疑增加了集成成本，即便它们都提供了获取应用配置的API。最终我们还是选用了微服务化改造之前自研的Matrix作为配置中心，一方面，可以保持新老系统使用同一套配置服务，降低维护成本，另一方面，在满足4个核心需求的前提下，Matrix还提供了一些独有的能力。</p>
+<h2 id="最终方案"><a href="#最终方案" class="headerlink" title="最终方案"></a>最终方案</h2><p>不管是Spring Cloud Config还是disconf，默认提供的客户端都深度绑定了Spring框架，这对非Spring应用而言无疑增加了集成成本，即便它们都提供了获取应用配置的API。最终我们还是选用了微服务化改造之前自研的Matrix作为配置中心，一方面，可以保持新老系统使用同一套配置服务，降低维护成本，另一方面，在满足4个核心需求的前提下，Matrix还提供了一些独有的能力。</p>
 <ul>
 <li>分离配置文件和配置项。对于配置文件，通过各类配套打包插件（sbt, maven, gradle），在打包时将配置文件打入应用包中，同时最小化对CI的侵入性；对于配置项，提供SDK，帮助应用从服务端获取配置项，同时支持简单的缓存机制。</li>
 <li>增加应用版本维度，即对于同一应用，可以在服务端针对不同版本或版本区间维护不同的应用配置。</li>
@@ -81,7 +136,7 @@
 <p>SmartStack可以说是三种方案中最复杂的，涉及了ZooKeeper、HAProxy、Nerve和Synapse四种异构组件，对运维提出了很高的要求。它最大的好处是对应用零侵入，且适用于任意类型的应用。</p>
 <h3 id="Consul"><a href="#Consul" class="headerlink" title="Consul"></a>Consul</h3><p><img src="consul-standard.png" alt=""></p>
 <p>Consul本质上属于应用外的注册方式，但可以通过SDK简化注册流程。而服务发现恰好相反，默认依赖于SDK，但可以通过Consul Template（下文会提到）去除SDK依赖。</p>
-<h2 id="方案选型"><a href="#方案选型" class="headerlink" title="方案选型"></a>方案选型</h2><p>最终我们选择了Consul作为服务注册中心的实现方案，主要原因有两点：</p>
+<h2 id="最终方案"><a href="#最终方案" class="headerlink" title="最终方案"></a>最终方案</h2><p>最终我们选择了Consul作为服务注册中心的实现方案，主要原因有两点：</p>
 <ol>
 <li>最小化对已有应用的侵入性，这也是贯穿我们整个微服务化改造的原则之一</li>
 <li>降低运维的复杂度，Consul Agent既可以运行在服务器模式，又可以运行在客户端模式</li>
@@ -108,7 +163,7 @@
 <p>第一，我所在公司（简称XR）的后台服务采用的主技术栈是Scala，虽然开发效率很高，但也带来一系列的副作用。1.由于Scala语言强大的表达能力和丰富的函数式特性，很容易写出俗称“意大利面条”式的代码，一个类文件动辄上千行，代码的可读性非常差，导致可维护性也很差。2.编译Scala源码时首先需要将Scala源码转换成Java源码然后再通过JVM进行编译，加上隐式类型的存在进一步拖慢了编译期间的类型推导，Scala的编译速度比Java足足慢了一个数量级，这个差异在代码量少的时候还不明显，但随着代码量的上升，就成了团队的一个nightmare，试想本地全量编译一次需要10+分钟。3.Scala小众语言的标签决定了Scala程序员的稀缺性，晦涩难懂的官方文档拔高了学习曲线，后果就是高昂的招聘成本和漫长的培养时间。以上这些副作用不但抵消了先期开发效率上的优势，而且使得对新需求的响应能力越来越慢，技术负债也越垒越高。</p>
 <p>第二，历经2年多的产品迭代，整个后台服务项目越来越庞大，已经成为一个典型意义上的单体应用（也就是Martin Fowler常说的monolithic application）：1.各个业务模块犬牙交错，重复代码随处可见，补丁代码越打越多。2.任何一个改动都需要一次全量发布，哪怕是修改一句文案。</p>
 <p>第三，与微服务化改造同时进行的是容器化改造，如果不对上述单体应用进行拆分，很多容器化带来的好处就会被削弱，甚至毫无意义，比如提高资源利用率（CPU型应用和内存型应用搭配部署），异构应用的环境隔离能力等。</p>
-<h3 id="限制"><a href="#限制" class="headerlink" title="限制"></a>限制</h3><p>谷歌前研发总监Tiger曾经说过，一个系统的演化一般会经历三个阶段，首先是under-engineer，然后是over-engineer，最后才是right-engineer。考虑到参与此次微服务改造的人员有限（一人主导，多人配合），同时也是团队第一次尝试做这类系统性的改造，最后我们决定采取一条比较实用的改良式路线：</p>
+<h3 id="局限"><a href="#局限" class="headerlink" title="局限"></a>局限</h3><p>谷歌前研发总监Tiger曾经说过，一个系统的演化一般会经历三个阶段，首先是under-engineer，然后是over-engineer，最后才是right-engineer。考虑到参与此次微服务改造的人员有限（一人主导，多人配合），同时也是团队第一次尝试做这类系统性的改造，最后我们决定采取一条比较实用的改良式路线：</p>
 <ol>
 <li>最小化对已有应用的侵入性</li>
 <li>偏好主流的微服务框架</li>
@@ -146,6 +201,7 @@
 <p>在微服务化系列的后续文章中，我会针对服务注册、配置中心、授权中心和服务监控分别展开介绍实施过程中的一些细节和经验。敬请期待。</p>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
 <li><a href="http://martinfowler.com/microservices/" target="_blank" rel="external">Microservices Resource Guide</a></li>
+<li><a href="http://slides.com/emacooshen/soa/#/" target="_blank" rel="external">企业基础架构浅析</a></li>
 <li><a href="http://callistaenterprise.se/blogg/teknik/2015/03/25/an-operations-model-for-microservices/" target="_blank" rel="external">An operations model for Microservices</a></li>
 <li><a href="https://mp.weixin.qq.com/s?__biz=MzA5Nzc4OTA1Mw==&amp;mid=407641457&amp;idx=1&amp;sn=183d27056f3bd8ef17e77a3c15dfb3dd" target="_blank" rel="external">实施微服务，我们需要哪些基础框架？</a></li>
 <li><a href="http://mp.weixin.qq.com/s?__biz=MzA5Nzc4OTA1Mw%3D%3D&amp;from=timeline&amp;idx=1&amp;isappinstalled=0&amp;mid=411129391&amp;scene=2&amp;sn=ebf06fb5cc4a5f57f86341ba4114cab8&amp;srcid=0409K1M3NlgPnoCzUXN8wiFP" target="_blank" rel="external">架构的本质是管理复杂性，微服务本身也是架构演化的结果</a></li>

@@ -107,7 +107,7 @@
 <p>SmartStack可以说是三种方案中最复杂的，涉及了ZooKeeper、HAProxy、Nerve和Synapse四种异构组件，对运维提出了很高的要求。它最大的好处是对应用零侵入，且适用于任意类型的应用。</p>
 <h3 id="Consul"><a href="#Consul" class="headerlink" title="Consul"></a>Consul</h3><p><img src="consul-standard.png" alt=""></p>
 <p>Consul本质上属于应用外的注册方式，但可以通过SDK简化注册流程。而服务发现恰好相反，默认依赖于SDK，但可以通过Consul Template（下文会提到）去除SDK依赖。</p>
-<h2 id="方案选型"><a href="#方案选型" class="headerlink" title="方案选型"></a>方案选型</h2><p>最终我们选择了Consul作为服务注册中心的实现方案，主要原因有两点：</p>
+<h2 id="最终方案"><a href="#最终方案" class="headerlink" title="最终方案"></a>最终方案</h2><p>最终我们选择了Consul作为服务注册中心的实现方案，主要原因有两点：</p>
 <ol>
 <li>最小化对已有应用的侵入性，这也是贯穿我们整个微服务化改造的原则之一</li>
 <li>降低运维的复杂度，Consul Agent既可以运行在服务器模式，又可以运行在客户端模式</li>

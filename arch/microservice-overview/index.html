@@ -83,7 +83,7 @@
 <p>第一，我所在公司（简称XR）的后台服务采用的主技术栈是Scala，虽然开发效率很高，但也带来一系列的副作用。1.由于Scala语言强大的表达能力和丰富的函数式特性，很容易写出俗称“意大利面条”式的代码，一个类文件动辄上千行，代码的可读性非常差，导致可维护性也很差。2.编译Scala源码时首先需要将Scala源码转换成Java源码然后再通过JVM进行编译，加上隐式类型的存在进一步拖慢了编译期间的类型推导，Scala的编译速度比Java足足慢了一个数量级，这个差异在代码量少的时候还不明显，但随着代码量的上升，就成了团队的一个nightmare，试想本地全量编译一次需要10+分钟。3.Scala小众语言的标签决定了Scala程序员的稀缺性，晦涩难懂的官方文档拔高了学习曲线，后果就是高昂的招聘成本和漫长的培养时间。以上这些副作用不但抵消了先期开发效率上的优势，而且使得对新需求的响应能力越来越慢，技术负债也越垒越高。</p>
 <p>第二，历经2年多的产品迭代，整个后台服务项目越来越庞大，已经成为一个典型意义上的单体应用（也就是Martin Fowler常说的monolithic application）：1.各个业务模块犬牙交错，重复代码随处可见，补丁代码越打越多。2.任何一个改动都需要一次全量发布，哪怕是修改一句文案。</p>
 <p>第三，与微服务化改造同时进行的是容器化改造，如果不对上述单体应用进行拆分，很多容器化带来的好处就会被削弱，甚至毫无意义，比如提高资源利用率（CPU型应用和内存型应用搭配部署），异构应用的环境隔离能力等。</p>
-<h3 id="限制"><a href="#限制" class="headerlink" title="限制"></a>限制</h3><p>谷歌前研发总监Tiger曾经说过，一个系统的演化一般会经历三个阶段，首先是under-engineer，然后是over-engineer，最后才是right-engineer。考虑到参与此次微服务改造的人员有限（一人主导，多人配合），同时也是团队第一次尝试做这类系统性的改造，最后我们决定采取一条比较实用的改良式路线：</p>
+<h3 id="局限"><a href="#局限" class="headerlink" title="局限"></a>局限</h3><p>谷歌前研发总监Tiger曾经说过，一个系统的演化一般会经历三个阶段，首先是under-engineer，然后是over-engineer，最后才是right-engineer。考虑到参与此次微服务改造的人员有限（一人主导，多人配合），同时也是团队第一次尝试做这类系统性的改造，最后我们决定采取一条比较实用的改良式路线：</p>
 <ol>
 <li>最小化对已有应用的侵入性</li>
 <li>偏好主流的微服务框架</li>
@@ -121,6 +121,7 @@
 <p>在微服务化系列的后续文章中，我会针对服务注册、配置中心、授权中心和服务监控分别展开介绍实施过程中的一些细节和经验。敬请期待。</p>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
 <li><a href="http://martinfowler.com/microservices/" target="_blank" rel="external">Microservices Resource Guide</a></li>
+<li><a href="http://slides.com/emacooshen/soa/#/" target="_blank" rel="external">企业基础架构浅析</a></li>
 <li><a href="http://callistaenterprise.se/blogg/teknik/2015/03/25/an-operations-model-for-microservices/" target="_blank" rel="external">An operations model for Microservices</a></li>
 <li><a href="https://mp.weixin.qq.com/s?__biz=MzA5Nzc4OTA1Mw==&amp;mid=407641457&amp;idx=1&amp;sn=183d27056f3bd8ef17e77a3c15dfb3dd" target="_blank" rel="external">实施微服务，我们需要哪些基础框架？</a></li>
 <li><a href="http://mp.weixin.qq.com/s?__biz=MzA5Nzc4OTA1Mw%3D%3D&amp;from=timeline&amp;idx=1&amp;isappinstalled=0&amp;mid=411129391&amp;scene=2&amp;sn=ebf06fb5cc4a5f57f86341ba4114cab8&amp;srcid=0409K1M3NlgPnoCzUXN8wiFP" target="_blank" rel="external">架构的本质是管理复杂性，微服务本身也是架构演化的结果</a></li>
