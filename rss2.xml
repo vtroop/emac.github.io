@@ -8,7 +8,7 @@
     <atom:link href="/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description></description>
-    <pubDate>Sun, 04 Dec 2016 08:26:07 GMT</pubDate>
+    <pubDate>Sun, 04 Dec 2016 08:42:45 GMT</pubDate>
     <generator>http://hexo.io/</generator>
     
     <item>
@@ -60,7 +60,7 @@
 <p><img src="oauth2-sequence.png" alt=""></p>
 <p>值得一提的是，除了服务调用，我们的服务授权中心还增加了SSO的支持，通过微信企业号实现各个服务后台的单点登录/登出，以后有机会再详细介绍。</p>
 <h2 id="冰山一角"><a href="#冰山一角" class="headerlink" title="冰山一角"></a>冰山一角</h2><p>至此，这个微服务化改造系列就算告一段落，等以后有了更多的积累，我会继续写下去。微服务是一个很大的话题，自Martin Fowler于<a href="http://martinfowler.com/articles/microservices.html" target="_blank" rel="external">2014年3月</a>提出以来，愈演愈热，并跟另一个话题容器化一起开创了一个全新的DevOps时代，引领了国内外大大小小各个互联网公司的技术走向，也影响了我们这一代程序员尤其是后端和运维的思维方式。从这个角度说，我写这个微服务化改造系列文章也是偶然中的必然，希望能给读过这些文章的你带来一些新的启发和思考。如果你对微服务也感兴趣或者有一些心得想跟我交流，欢迎赞赏并在<a href="https://github.com/emac/emac.github.io/issues/1" target="_blank" rel="external">赞赏榜</a>上留下你的微信号。</p>
-<p><img src="emacoo.png" alt=""></p>
+<p><img src="like.png" alt=""></p>
 <blockquote>
 <p>少年读书如隙中窥月，中年读书如庭中望月，老年读书如台上玩月，皆以阅历之浅深为所得之浅深耳。– 张潮 《幽梦影》</p>
 </blockquote>
