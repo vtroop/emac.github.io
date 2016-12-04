@@ -114,7 +114,7 @@
 <h2 id="框架选型"><a href="#框架选型" class="headerlink" title="框架选型"></a>框架选型</h2><p>在选型OAuth框架时，我主要调研了<a href="https://github.com/apereo/cas" target="_blank" rel="external">CAS</a>,<a href="http://oltu.apache.org/" target="_blank" rel="external">Apache Oltu</a>,<a href="http://projects.spring.io/spring-security-oauth/" target="_blank" rel="external">Spring Security OAuth</a>和<a href="https://github.com/OAuth-Apis/apis" target="_blank" rel="external">OAuth-Apis</a>，对比如下：</p>
 <p><img src="oauth2-frameworks.png" alt=""></p>
 <p>不考虑实际业务场景，CAS和Spring Security OAuth相对另外两种框架，无论是集成成本还是可扩展性，都有明显优势。前文提到，由于我们选用了Spring Boot作为统一的微服务实现框架，Spring Security OAuth是更自然的选择，并且维护成本相对低一些（服务端）。</p>
-<h2 id="最终方案"><a href="#最终方案" class="headerlink" title="最终方案"></a>最终方案</h2><p>最终我们基于Spring Security OAuth框架实现了自己的服务授权中心，鉴权部分做的比较简单，目前只支持私网认证。大致的服务授权流程如下：</p>
+<h2 id="最终方案"><a href="#最终方案" class="headerlink" title="最终方案"></a>最终方案</h2><p>最后我们基于Spring Security OAuth框架实现了自己的服务授权中心，鉴权部分做的比较简单，目前只支持私网认证。大致的服务授权流程如下：</p>
 <p><img src="oauth2-interaction.png" alt=""></p>
 <p><img src="oauth2-sequence.png" alt=""></p>
 <p>值得一提的是，除了服务调用，我们的服务授权中心还增加了SSO的支持，通过微信企业号实现各个服务后台的单点登录/登出，以后有机会再详细介绍。</p>
