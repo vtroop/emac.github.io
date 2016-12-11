@@ -108,8 +108,12 @@ public class CacheConfig {
     public RedisTemplate&lt;Object, Object&gt; redisTemplate() {
         RedisTemplate&lt;Object, Object&gt; redisTemplate = new RedisTemplate&lt;Object, Object&gt;();
         redisTemplate.setConnectionFactory(jedisConnectionFactory);
+        // 开启事务支持
+        redisTemplate.setEnableTransactionSupport(true);
         // 使用String格式序列化缓存键
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+        redisTemplate.setKeySerializer(stringRedisSerializer);
+        redisTemplate.setHashKeySerializer(stringRedisSerializer);
         return redisTemplate;
     }
 
