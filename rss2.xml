@@ -8,8 +8,50 @@
     <atom:link href="/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description></description>
-    <pubDate>Mon, 02 Jan 2017 16:19:14 GMT</pubDate>
+    <pubDate>Sun, 08 Jan 2017 13:39:13 GMT</pubDate>
     <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>我的写作工具箱</title>
+      <link>http://emacoo.cn/notes/writing-toolbox/</link>
+      <guid>http://emacoo.cn/notes/writing-toolbox/</guid>
+      <pubDate>Sat, 07 Jan 2017 16:00:00 GMT</pubDate>
+      <description>
+      
+        &lt;p&gt;&lt;img src=&quot;mac-coffee.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;出门左拐：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;why-i-write&quot;&gt;我们为什么要写作？&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;how-i-writ
+      
+      </description>
+      
+      <content:encoded><![CDATA[<p><img src="mac-coffee.jpg" alt=""></p>
+<blockquote>
+<p>出门左拐：</p>
+<ul>
+<li><a href="why-i-write">我们为什么要写作？</a></li>
+<li><a href="how-i-write">我是如何写作的？</a></li>
+</ul>
+</blockquote>
+<p>作为写作三部曲的最后一篇，展示一下我的日常写作工具箱。</p>
+<p>1 Markdown</p>
+<p>不夸张的说，没有Markdown，就没有现在这一波以简书，掘金为代表的写作热。在Markdown之前，摆在程序员面前的写作格式主要有Word和Wiki。先说Word。对于文科生思维的办公人群，Word是不二之选，但对于理科生思维的程序员而言，Word里面的各种模板、段落格式、页眉页脚，就像孙悟空头上的紧箍咒，一想就头疼，尤其是像我这样有代码洁癖的程序员，字没码几个，排版排了一遍又一遍。Word的第二个问题在于可传播性，由于Word是一种二进制格式，需要用特定的软件才能打开，而在移动互联网时代，很少有人有耐心在阅读之前先下载一个文档，更别说很多人手机上可能都没有能够打开Word的App。</p>
+<p>再看Wiki。Wiki虽然没有可传播性的问题，但极度依赖于网络，在离线环境下，你是没法编辑一个Wiki的。Wiki的另一个问题在于缺少统一的规范，我用过很多Wiki网站，虽然大体上支持的格式相同，但在纯文本编辑模式下，很多格式（比如加粗，链接）的表示方式不尽相同，这就让文章的可迁移性大打折扣。</p>
+<p>Markdown可以说解决了上述所有的问题，通过统一的规范，纯文本排版，让写作的人能够专注于内容本身，而不用操心格式，最大化写作效率。Markdown另一个对程序员友好的特性是纯文本格式，既方便离线编辑，也容易对文章进行版本化管理。</p>
+<p>我本地用的Markdown编辑软件是<a href="http://www.sublimetext.com/" target="_blank" rel="external">Sublime</a>, 配合<a href="https://github.com/jonschlinkert/sublime-markdown-extended" target="_blank" rel="external">Markdown Extended</a>和<a href="https://github.com/adampresley/sublime-view-in-browser" target="_blank" rel="external">View In Browser</a>插件。</p>
+<p>2 画图工具</p>
+<p>为了帮助读者更好的理解文章内容，一般每篇文章我都会配一些图片。配图目的不同，来源也会不同。对于技术类文章，如果是介绍第三方框架，我会优先引用官方网站的图片，然后是一些我读到的比较好的文章。如果是介绍自己开发的系统或者方案，我会自己画图，之前用<a href="https://www.yworks.com/products/yed" target="_blank" rel="external">yEd</a>或者<a href="https://www.processon.com/" target="_blank" rel="external">processon</a>比较多，最近发现<a href="https://chrome.google.com/webstore/detail/gliffy-diagrams/bhmicilclplefnflapjmnngmkkkkpfad?hl=zh-CN" target="_blank" rel="external">Gliffy Diagrams For Chrome</a>这个神器后基本上就用这个了，有时也会用一下Keynote或者Powerpoint。对于非技术类文章，Google是最好的搜图利器。</p>
+<p>3 建站工具</p>
+<p>有了文章和配图，接下来就要为它们找一个容身之处。我的这个个人站点最早是搭建在Amazon的AWS上面，用的CMS系统是<a href="https://getgrav.org/" target="_blank" rel="external">Grav</a>，后来服务器到期，就切换到GitHub上面了，用的是目前最流行的<a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>，具体搭建步骤可以参考<a href="http://jiji262.github.io/2016/04/15/2016-04-15-hexo-github-pages-blog/" target="_blank" rel="external">这篇文章</a>。相对于Grav，Hexo更轻量，所有操作都可以在命令行下完成，支持一键发布到GitHub，非常方便。另一个我比较喜欢的Hexo的特性是草稿功能，对于一些你感兴趣但准备的还不够的主题，可以边做准备边写草稿，全部写完了再发布。</p>
+<p>4 写作环境</p>
+<p>对于程序员而言，写作是一种抽象程度更高的编程，需要放松的环境和专注的思考。对我而言，Mac，豆瓣FM，降噪耳机是不可或缺的陪伴。刻意的营造一些仪式感，可以帮助你更快的进入状态，比如一盏灯，一杯咖啡，一块超大鼠标垫。</p>
+<p><img src="mi-mouse-pad.jpg" alt=""></p>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/notes/writing-toolbox/#disqus_thread</comments>
+    </item>
     
     <item>
       <title>我是如何写作的？</title>
@@ -18,11 +60,23 @@
       <pubDate>Sun, 01 Jan 2017 16:00:00 GMT</pubDate>
       <description>
       
-        &lt;h2 id=&quot;我的写作心得&quot;&gt;&lt;a href=&quot;#我的写作心得&quot; class=&quot;headerlink&quot; title=&quot;我的写作心得&quot;&gt;&lt;/a&gt;我的写作心得&lt;/h2&gt;&lt;p&gt;&lt;a href=&quot;http://emacoo.cn/notes/why-i-write/&quot;&gt;上篇&lt;/a&gt;文章
+        &lt;blockquote&gt;
+&lt;p&gt;出门左拐：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;why-i-write&quot;&gt;我们为什么要写作？&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;我的写作心得&quot;&gt;&lt;a href=&quot;#我的写作心得&quot; class=&quot;hea
       
       </description>
       
-      <content:encoded><![CDATA[<h2 id="我的写作心得"><a href="#我的写作心得" class="headerlink" title="我的写作心得"></a>我的写作心得</h2><p><a href="http://emacoo.cn/notes/why-i-write/">上篇</a>文章谈了我对写作的一些认识，这篇文章继续聊一下我现阶段的一些写作心得。最近在《得到》上听到一篇吴军老师谈写作的<a href="http://www.jianshu.com/p/e3710e135208" target="_blank" rel="external">文章</a>，深以为然，对照这篇文章，同时结合我的一些经验，分4个步骤介绍一下我的写作流程。</p>
+      <content:encoded><![CDATA[<blockquote>
+<p>出门左拐：</p>
+<ul>
+<li><a href="why-i-write">我们为什么要写作？</a></li>
+</ul>
+</blockquote>
+<h2 id="我的写作心得"><a href="#我的写作心得" class="headerlink" title="我的写作心得"></a>我的写作心得</h2><p><a href="http://emacoo.cn/notes/why-i-write/">上篇</a>文章谈了我对写作的一些认识，这篇文章继续聊一下我现阶段的一些写作心得。最近在《得到》上听到一篇吴军老师谈写作的<a href="http://www.jianshu.com/p/e3710e135208" target="_blank" rel="external">文章</a>，深以为然，对照这篇文章，同时结合我的一些经验，分4个步骤介绍一下我的写作流程。</p>
 <h3 id="1-选题"><a href="#1-选题" class="headerlink" title="1 选题"></a>1 选题</h3><p>选题不分好坏，只看适不适合。那对于一个程序员，什么是适合的选题？在我看来，至少要满足两个条件：第一，感兴趣的，第二，有一些实践经验。兴趣是最好的老师，也会激发你最大的热情。有了兴趣的指引，你才能投入百分之百的热情，坚持不懈的探寻答案，并且做到精益求精。如果少了兴趣，写出来的文章往往平淡无味，并且更大的可能是半途而废。除了兴趣，有一些相关的实践经验也是不可或缺的。古人云，纸上得来终觉浅，绝知此事要躬行。王阳明也说，知行合一。读再多书，看再多文章，如果不动手实践一番，那还是别人的知识，写出来的文章也至多只能算是人云亦云。</p>
 <h3 id="2-准备"><a href="#2-准备" class="headerlink" title="2 准备"></a>2 准备</h3><p>确定主题之后，下一步就是做一些准备工作，俗称做功课。就写博客而言，我一般至少提前一周开始准备。准备的内容包括：</p>
 <ol>
