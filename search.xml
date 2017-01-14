@@ -15,7 +15,7 @@
 </ul>
 </blockquote>
 <p>作为写作三部曲的最后一篇，展示一下我的日常写作工具箱。</p>
-<h2 id="Markdown"><a href="#Markdown" class="headerlink" title="Markdown"></a>Markdown</h2><p>不夸张的说，没有Markdown，就没有现在这一波以掘金，SegmentFault为代表的写作热。在Markdown之前，摆在程序员面前的写作格式主要有Word和Wiki。先说Word。对于文科生思维的办公人群，Word是不二之选，但对于理科生思维的程序员而言，Word里面的各种模板、段落格式、页眉页脚，就像孙悟空头上的紧箍咒，一想就头疼，尤其是像我这样有代码洁癖的程序员，字没码几个，排版排了一遍又一遍。Word的第二个问题在于可传播性，由于Word是一种二进制格式，需要用特定的软件才能打开，而在移动互联网时代，很少有人有耐心在阅读之前先下载一个文档，更别说很多人手机上可能都没有能够打开Word的App。</p>
+<h2 id="Markdown"><a href="#Markdown" class="headerlink" title="Markdown"></a>Markdown</h2><p>不夸张的说，没有Markdown，就没有现在这一波以掘金，简书，SegmentFault为代表的写作热。在Markdown之前，摆在程序员面前的写作格式主要有Word和Wiki。先说Word。对于文科生思维的办公人群，Word是不二之选，但对于理科生思维的程序员而言，Word里面的各种模板、段落格式、页眉页脚，就像孙悟空头上的紧箍咒，一想就头疼，尤其是像我这样有代码洁癖的程序员，字没码几个，排版排了一遍又一遍。Word的第二个问题在于可传播性，由于Word是一种二进制格式，需要用特定的软件才能打开，而在移动互联网时代，很少有人有耐心在阅读之前先下载一个文档，更别说很多人手机上可能都没有能够打开Word的App。</p>
 <p>再看Wiki。Wiki虽然没有可传播性的问题，但极度依赖于网络，在离线环境下，你是没法编辑一个Wiki的。Wiki的另一个问题在于缺少统一的规范，我用过很多Wiki网站，虽然大体上支持的格式相同，但在纯文本编辑模式下，很多格式（比如加粗，链接）的表示方式不尽相同，这就让文章的可迁移性大打折扣。</p>
 <p>Markdown可以说解决了上述所有的问题，通过统一的规范，纯文本排版，让写作的人能够专注于内容本身，而不用操心格式，最大化写作效率。Markdown另一个对程序员友好的特性是纯文本格式，既方便离线编辑，也容易对文章进行版本化管理。</p>
 <p>我本地用的Markdown编辑软件是<a href="http://www.sublimetext.com/" target="_blank" rel="external">Sublime</a>, 配合<a href="https://github.com/jonschlinkert/sublime-markdown-extended" target="_blank" rel="external">Markdown Extended</a>和<a href="https://github.com/adampresley/sublime-view-in-browser" target="_blank" rel="external">View In Browser</a>插件。</p>
@@ -62,8 +62,9 @@
       <content type="html"><![CDATA[<blockquote>
 <p>2017，夕惕若厉，无咎</p>
 </blockquote>
-<h2 id="在读"><a href="#在读" class="headerlink" title="在读"></a>在读</h2><p><img src="1900596121-1_w_2.jpg" alt=""><br><img src="23517521-1_w_1.jpg" alt=""></p>
-<h2 id="已读"><a href="#已读" class="headerlink" title="已读"></a>已读</h2>]]></content>
+<h2 id="在读"><a href="#在读" class="headerlink" title="在读"></a>在读</h2><p><img src="1900596121-1_w_2.jpg" alt=""><br><img src="23685951-1_w_2.jpg" alt=""></p>
+<h2 id="已读"><a href="#已读" class="headerlink" title="已读"></a>已读</h2><p><img src="23517521-1_w_1.jpg" alt=""></p>
+]]></content>
     </entry>
     
     <entry>
