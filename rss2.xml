@@ -8,7 +8,7 @@
     <atom:link href="/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description></description>
-    <pubDate>Sun, 05 Feb 2017 17:03:17 GMT</pubDate>
+    <pubDate>Sun, 05 Feb 2017 17:05:33 GMT</pubDate>
     <generator>http://hexo.io/</generator>
     
     <item>
@@ -46,18 +46,18 @@
 <li>ShardedJedis/BinaryShardedJedis: 首先对传入的Key进行Hash计算（默认使用高性能、低碰撞率的<a href="https://sites.google.com/site/murmurhash/" target="_blank" rel="external">MurmurHash</a>算法），然后根据计算结果找到相应的Jedis实例，最后执行命令。</li>
 </ul>
 <h3 id="Pool-提供连接池和Sentinel支持"><a href="#Pool-提供连接池和Sentinel支持" class="headerlink" title="Pool: 提供连接池和Sentinel支持"></a>Pool: 提供连接池和<a href="https://redis.io/topics/sentinel" target="_blank" rel="external">Sentinel</a>支持</h3><ul>
-<li>JedisPool: 基于<a href="https://commons.apache.org/proper/commons-pool/" target="_blank" rel="external">Apache Commons Pool</a>实现的连接池，通过JedisFactory获取Jedis实例</li>
-<li>JedisSentinelPool: 通过侦听”switch-master”事件，每当master切换时，调用JedisFactory重新初始化master连接信息</li>
-<li>ShardedJedisPool: 与JedisPool类似，通过ShardedJedisFactory获取ShardedJedis实例</li>
+<li>JedisPool: 基于<a href="https://commons.apache.org/proper/commons-pool/" target="_blank" rel="external">Apache Commons Pool</a>实现的连接池，通过JedisFactory获取Jedis实例。</li>
+<li>JedisSentinelPool: 通过侦听”switch-master”事件，每当master切换时，调用JedisFactory重新初始化master连接信息。</li>
+<li>ShardedJedisPool: 与JedisPool类似，通过ShardedJedisFactory获取ShardedJedis实例。</li>
 </ul>
 <h3 id="Pipeline-提供Pipelining和事务支持"><a href="#Pipeline-提供Pipelining和事务支持" class="headerlink" title="Pipeline: 提供Pipelining和事务支持"></a>Pipeline: 提供<a href="https://redis.io/topics/pipelining" target="_blank" rel="external">Pipelining</a>和<a href="https://redis.io/topics/transactions" target="_blank" rel="external">事务</a>支持</h3><ul>
 <li>Pipeline: 通过Jedis#pipelined()获取实例。以类型安全的方式获取执行结果，通过BuilderFactory将Object类型的Response转化为期望的结果类型。<ul>
-<li>非事务模式：构建Response Queue，然后通过Client#getMany批量获取结果。</li>
+<li>非事务模式：构建Response Queue，然后通过Client#getMany()批量获取结果。</li>
 <li>事务模式：通过MultiResponseBuilder缓存Response，然后批量获取结果。</li>
 </ul>
 </li>
-<li>Transaction: 通过Jedis#multi()获取实例。天然的事务属性，通过Client#getMany批量获取结果，但无法获取单条命令的结果，且类型非安全。</li>
-<li>ShardedJedisPipeline: ShardedJedis#pipelined()获取实例。不同于Pipeline和Transaction，由于请求可能落到多个Client上，只能通过Client#getOne挨个获取结果，类型非安全。</li>
+<li>Transaction: 通过Jedis#multi()获取实例。天然的事务属性，通过Client#getMany()批量获取结果，但无法获取单条命令的结果，且类型非安全。</li>
+<li>ShardedJedisPipeline: ShardedJedis#pipelined()获取实例。不同于Pipeline和Transaction，由于请求可能落到多个Client上，只能通过Client#getOne()挨个获取结果，类型非安全。</li>
 </ul>
 <h3 id="Cluster-提供Cluster支持"><a href="#Cluster-提供Cluster支持" class="headerlink" title="Cluster: 提供Cluster支持"></a>Cluster: 提供<a href="https://redis.io/topics/cluster-tutorial" target="_blank" rel="external">Cluster</a>支持</h3><ul>
 <li>JedisCluster/BinaryJedisCluster: 通过JedisClusterConnectionHandler获取Jedis实例，然后执行命令。</li>
