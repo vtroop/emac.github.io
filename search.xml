@@ -9,7 +9,7 @@
       <content type="html"><![CDATA[<blockquote>
 <p>出门左拐：</p>
 <ul>
-<li><a href="source-retrofit">【赏码会】HTTP Client中的瑞士军刀：Retrofit</a></li>
+<li><a href="http://emacoo.cn/coding/source-retrofit/">【赏码会】HTTP Client中的瑞士军刀：Retrofit</a></li>
 </ul>
 </blockquote>
 <h2 id="Jedis简介"><a href="#Jedis简介" class="headerlink" title="Jedis简介"></a>Jedis简介</h2><p>作为Redis官方推荐的三个<a href="https://redis.io/clients#java" target="_blank" rel="external">Java Client</a>之一，Jedis推出时间最早，使用最为广泛（Spring默认使用的Redis Client就是Jedis），同时Star数也遥遥领先于另外两个。和其他Redis Client一样，Jedis通过<a href="https://redis.io/topics/protocol" target="_blank" rel="external">RESP协议</a>向Redis发送命令请求和解析响应数据。</p>
@@ -70,8 +70,8 @@
 <blockquote>
 <p>出门左拐：</p>
 <ul>
-<li><a href="why-i-write">我们为什么要写作？</a></li>
-<li><a href="how-i-write">我是如何写作的？</a></li>
+<li><a href="http://emacoo.cn/notes/why-i-write/">我们为什么要写作？</a></li>
+<li><a href="http://emacoo.cn/notes/how-i-write/">我是如何写作的？</a></li>
 </ul>
 </blockquote>
 <p>作为写作三部曲的最后一篇，展示一下我的日常写作工具箱。</p>
@@ -92,7 +92,7 @@
       <content type="html"><![CDATA[<blockquote>
 <p>出门左拐：</p>
 <ul>
-<li><a href="why-i-write">我们为什么要写作？</a></li>
+<li><a href="http://emacoo.cn/notes/why-i-write/">我们为什么要写作？</a></li>
 </ul>
 </blockquote>
 <h2 id="我的写作心得"><a href="#我的写作心得" class="headerlink" title="我的写作心得"></a>我的写作心得</h2><p><a href="http://emacoo.cn/notes/why-i-write/">上篇</a>文章谈了我对写作的一些认识，这篇文章继续聊一下我现阶段的一些写作心得。最近在《得到》上听到一篇吴军老师谈写作的<a href="http://www.jianshu.com/p/e3710e135208" target="_blank" rel="external">文章</a>，深以为然，对照这篇文章，同时结合我的一些经验，分4个步骤介绍一下我的写作流程。</p>
