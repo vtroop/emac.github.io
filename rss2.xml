@@ -8,7 +8,7 @@
     <atom:link href="/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description></description>
-    <pubDate>Sun, 05 Mar 2017 16:11:02 GMT</pubDate>
+    <pubDate>Sun, 05 Mar 2017 16:17:12 GMT</pubDate>
     <generator>http://hexo.io/</generator>
     
     <item>
@@ -27,7 +27,7 @@
 <p>继“<a href="http://emacoo.cn/coding/source-retrofit/">赏码会</a>”之后，最近和团队开始尝试一种新的技术活动形式——“书友会”。简单来说，就是一起选出一些经典的技术书籍，线下阅读，当面讨论，共同进步。文末有具体的活动形式，欢迎到我的<a href="https://github.com/emac/emac.github.io/issues/2" target="_blank" rel="external">留言板</a>交流。</p>
 </blockquote>
 <p>作为“书友会”的第一期书籍，我们选择的是<a href="http://product.dangdang.com/20750190.html" target="_blank" rel="external">《代码整洁之道》</a>（后面简称《整洁》）。在我看来，《整洁》和另外两本经典之作<a href="http://product.dangdang.com/22543344.html" target="_blank" rel="external">《代码大全》</a>，<a href="http://product.dangdang.com/23734636.html" target="_blank" rel="external">《重构：改善既有代码的设计》</a>，是每一个程序员入行必读的三本基础技术书籍。这三本书能够帮助你建立正确的编程理念，养成良好的编程习惯。我建议可以按照《代码》，《重构》，《整洁》的顺序进行阅读。相对另外两本书，《整洁》涉及的面更广一些，内容也更有深度，比较适合有1~2年实际编程经验的程序员。不过即便是更资深的程序员，相信也能从中有所收获。我第一次读这本书还是在2010年，时隔7年重读这本经典之作，仍然感觉历久弥新。在介绍这本书之前，我们先来了解一个跟简洁有关的普适性原则。</p>
-<h2 id="奥卡姆剃刀原则"><a href="#奥卡姆剃刀原则" class="headerlink" title="奥卡姆剃刀原则"></a>奥卡姆剃刀原则</h2><p><img src="occam.jepg" alt=""></p>
+<h2 id="奥卡姆剃刀原则"><a href="#奥卡姆剃刀原则" class="headerlink" title="奥卡姆剃刀原则"></a>奥卡姆剃刀原则</h2><p><img src="occam.jpeg" alt=""></p>
 <blockquote>
 <p>奥卡姆剃刀定律（Occam’s Razor）又称“奥康的剃刀”，它是由14世纪逻辑学家、圣方济各会修士奥卡姆的威廉（William of Occam，约1285年至1349年）提出。这个原理称为“如无必要，勿增实体”，即“简单有效原理”。正如他在《箴言书注》2卷15题说“切勿浪费较多东西去做，用较少的东西，同样可以做好的事情。” – <a href="http://baike.baidu.com/item/%E5%A5%A5%E5%8D%A1%E5%A7%86%E5%89%83%E5%88%80%E5%8E%9F%E7%90%86" target="_blank" rel="external">百度百科</a></p>
 </blockquote>
