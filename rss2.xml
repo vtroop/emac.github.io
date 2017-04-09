@@ -8,11 +8,11 @@
     <atom:link href="/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description></description>
-    <pubDate>Sun, 09 Apr 2017 11:15:22 GMT</pubDate>
+    <pubDate>Sun, 09 Apr 2017 11:16:43 GMT</pubDate>
     <generator>http://hexo.io/</generator>
     
     <item>
-      <title>JUnit 5尝鲜</title>
+      <title>JUnit 5的前世今生</title>
       <link>http://emacoo.cn/backend/junit5/</link>
       <guid>http://emacoo.cn/backend/junit5/</guid>
       <pubDate>Sat, 08 Apr 2017 16:00:00 GMT</pubDate>
