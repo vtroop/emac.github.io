@@ -8,8 +8,59 @@
     <atom:link href="/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description></description>
-    <pubDate>Sun, 23 Apr 2017 12:46:01 GMT</pubDate>
+    <pubDate>Mon, 01 May 2017 08:50:48 GMT</pubDate>
     <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>面向开发的测试技术（一）：Mock</title>
+      <link>http://emacoo.cn/arch/test-mock/</link>
+      <guid>http://emacoo.cn/arch/test-mock/</guid>
+      <pubDate>Sat, 29 Apr 2017 01:51:37 GMT</pubDate>
+      <description>
+      
+        &lt;blockquote&gt;
+&lt;p&gt;引子：自上世纪末Kent Beck提出&lt;a href=&quot;https://en.wikipedia.org/wiki/Test-driven_development&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;TDD(Test-D
+      
+      </description>
+      
+      <content:encoded><![CDATA[<blockquote>
+<p>引子：自上世纪末Kent Beck提出<a href="https://en.wikipedia.org/wiki/Test-driven_development" target="_blank" rel="external">TDD(Test-Driven Development)</a>开发理念以来，开发和测试的边界变的越来越模糊，从原本上下游的依赖关系，逐步演变成你中有我、我中有你的互赖关系，甚至很多公司设立了新的QE(Quality Engineer)职位。和传统的QA(Quality Assurance)不同，QE的主要职责是通过工程化的手段保证项目质量，这些手段包括但不仅限于编写单元测试、集成测试，搭建自动化测试流程，设计性能测试等。可以说，QE身上兼具了QA的质量意识和开发的工程能力。从这篇开始，我会从开发的角度分三期聊聊QE这个亦测试亦开发的角色所需的基本技能。</p>
+</blockquote>
+<h2 id="1-什么是Mock？"><a href="#1-什么是Mock？" class="headerlink" title="1 什么是Mock？"></a>1 什么是Mock？</h2><p>在软件测试领域，Mock的意思是模拟，简单来说，就是通过某种技术手段模拟测试对象的行为，返回预先设计的结果。这里的关键词是<strong>预先设计</strong>，也就是说对于任意被测试的对象，可以根据具体测试场景的需要，返回特定的结果。打个比方，就像BBC纪录片里面的假企鹅，可以根据拍摄需要作出不同的反应。</p>
+<h2 id="2-Mock有什么用？"><a href="#2-Mock有什么用？" class="headerlink" title="2 Mock有什么用？"></a>2 Mock有什么用？</h2><p>理解了什么是Mock，再来看Mock有哪些用途。首先，Mock可以用来解除测试对象对外部服务的依赖（比如数据库，第三方接口等），使得测试用例可以<strong>独立运行</strong>。不管是传统的单体应用，还是现在流行的微服务，这点都特别重要，因为任何外部依赖的存在都会极大的限制测试用例的可迁移性和稳定性。可迁移性是指，如果要在一个新的测试环境中运行相同的测试用例，那么除了要保证测试对象自身能够正常运行，还要保证所有依赖的外部服务也能够被正常调用。稳定性是指，如果外部服务不可用，那么测试用例也可能会失败。通过Mock去除外部依赖之后，不管是测试用例的可迁移性还是稳定性，都能够上一个台阶。</p>
+<p><img src="standalone.png" alt=""></p>
+<p>Mock的第二个好处是替换外部服务调用，<strong>提升测试用例的运行速度</strong>。任何外部服务调用至少是跨进程级别的消耗，甚至是跨系统、跨网络的消耗，而Mock可以把消耗降低到进程内。比如原来一次秒级的网络请求，通过Mock可以降至毫秒级，整整3个数量级的差别。</p>
+<p>Mock的第三个好处是<strong>提升测试效率</strong>。这里说的测试效率有两层含义。第一层含义是单位时间运行的测试用例数，这是运行速度提升带来的直接好处。而第二层含义是一个QE单位时间创建的测试用例数。如何理解这第二层含义呢？以单体应用为例，随着业务复杂度的上升，为了运行一个测试用例可能需要准备很多测试数据，与此同时还要尽量保证多个测试用例之间的测试数据互不干扰。为了做到这一点，QE往往需要花费大量的时间来维护一套可运行的测试数据。有了Mock之后，由于去除了测试用例之间共享的数据库依赖，QE就可以针对每一个或者每一组测试用例设计一套独立的测试数据，从而很容易的做到不同测试用例之间的数据隔离性。而对于微服务，由于一个微服务可能级联依赖很多其他的微服务，运行一个测试用例甚至需要跨系统准备一套测试数据，如果没有Mock，基本上可以说是不可能的。因此，不管是单体应用还是微服务，有了Mock之后，QE就可以省去大量的准备测试数据的时间，专注于测试用例本身，自然也就提升了单人的测试效率。</p>
+<h2 id="3-如何Mock？"><a href="#3-如何Mock？" class="headerlink" title="3 如何Mock？"></a>3 如何Mock？</h2><p>说了这么多Mock的好处，那么究竟如何在测试中使用Mock呢？针对不同的测试场景，可以选择不同的Mock框架。</p>
+<h3 id="3-1-Mockito"><a href="#3-1-Mockito" class="headerlink" title="3.1 Mockito"></a>3.1 Mockito</h3><p>如果测试对象是一个方法，尤其是涉及数据库操作的方法，那么<a href="http://site.mockito.org/" target="_blank" rel="external">Mockito</a>可能是最好的选择。作为使用最广泛的Mock框架，Mockito出于<a href="http://easymock.org/" target="_blank" rel="external">EasyMock</a>而胜于EasyMock，乃至被默认集成进Spring Testing。其实现原理是，通过CGLib在运行时为每一个被Mock的类或者对象动态生成一个<strong>代理对象</strong>，返回<strong>预先设计</strong>的结果。集成Mockito的基本步骤是：</p>
+<ol>
+<li>标记被Mock的类或者对象，生成代理对象</li>
+<li>通过Mockito API定制代理对象的行为</li>
+<li>调用代理对象的方法，获得预先设计的结果</li>
+</ol>
+<p>下面是我GitHub上的<a href="https://github.com/emac/spring-boot-features-demo" target="_blank" rel="external">示例工程</a>里的一个例子，</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@RunWith</span>(SpringRunner.class)</div><div class="line"><span class="meta">@SpringBootTest</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SignonServiceTests</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="comment">// 测试对象，一个服务类</span></div><div class="line">    <span class="meta">@Autowired</span></div><div class="line">    <span class="keyword">private</span> SignonService signonService;</div><div class="line"></div><div class="line">    <span class="comment">// 被Mock的类，被服务类所依赖的一个DAO类</span></div><div class="line">    <span class="meta">@MockBean</span></div><div class="line">    <span class="keyword">private</span> SignonDao dao;</div><div class="line"></div><div class="line">    <span class="meta">@Test</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testFindAll</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="comment">// SignonService#findAll()内部会调用SignonDao#findAll()</span></div><div class="line">        <span class="comment">// 如果不做定制，所有被Mock的类默认返回空</span></div><div class="line">        List&lt;Signon&gt; signons = signonService.findAll();</div><div class="line">        assertTrue(CollectionUtils.isEmpty(signons));</div><div class="line"></div><div class="line">        <span class="comment">// 定制返回结果</span></div><div class="line">        Signon signon = <span class="keyword">new</span> Signon();</div><div class="line">        signon.setUsername(<span class="string">"foo"</span>);</div><div class="line">        when(dao.findAll()).thenReturn(Lists.newArrayList(signon));</div><div class="line"></div><div class="line">        signons = signonService.findAll();</div><div class="line">        <span class="comment">// 验证返回结果和预先设计的结果一致</span></div><div class="line">        assertEquals(<span class="number">1</span>, signons.size());</div><div class="line">        assertEquals(<span class="string">"foo"</span>, signons.get(<span class="number">0</span>).getUsername());</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>从上面的测试用例可以看到，通过Mock服务类所依赖的DAO类，我们可以跳过所有的数据库操作，任意定制返回结果，从而专注于测试服务类内部的业务逻辑。这是传统的非Mock测试所难以实现的。</p>
+<p><em>注意：Mockito不支持Mock私有方法或者静态方法，如果要Mock这类方法，可以使用<a href="https://github.com/powermock/powermock" target="_blank" rel="external">PowerMock</a>。</em></p>
+<h3 id="3-2-WireMock"><a href="#3-2-WireMock" class="headerlink" title="3.2 WireMock"></a>3.2 WireMock</h3><p>如果说Mocketo是瑞士军刀，可以Mock Everything，那么WireMock就是为微服务而生的倚天剑。和处在对象层的Mockito不同，WireMock针对的是<strong>API</strong>。假设有两个微服务，Service-A和Service-B，Service-A里的一个API（姑且称为API-1），依赖于Service-B，那么使用传统的测试方法，测试API-1时必然需要同时启动Service-B。如果使用WireMock，那么就可以<strong>在Service-A端</strong>Mock所有依赖的Service-B的API，从而去掉Service-B这个外部依赖。</p>
+<p>同样看一个我GitHub上的<a href="https://github.com/emac/spring-boot-features-demo" target="_blank" rel="external">示例工程</a>里的一个例子，</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@RunWith</span>(SpringRunner.class)</div><div class="line"><span class="meta">@WebMvcTest</span>(VacationController.class)</div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">VacationControllerTests</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="comment">// Mock被依赖的另一个微服务</span></div><div class="line">    <span class="meta">@Rule</span></div><div class="line">    <span class="keyword">public</span> WireMockRule wireMockRule = <span class="keyword">new</span> WireMockRule(<span class="number">3001</span>);</div><div class="line">    </div><div class="line">    <span class="meta">@Autowired</span></div><div class="line">    <span class="keyword">private</span> MockMvc mockMvc;</div><div class="line"></div><div class="line">    <span class="meta">@Autowired</span></div><div class="line">    <span class="keyword">private</span> ObjectMapper objectMapper;</div><div class="line"></div><div class="line">    <span class="meta">@Before</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">before</span><span class="params">()</span> <span class="keyword">throws</span> JsonProcessingException </span>&#123;</div><div class="line">        <span class="comment">// 定制返回结果</span></div><div class="line">        JsonResult&lt;Boolean&gt; expected = JsonResult.ok(<span class="keyword">true</span>);</div><div class="line">        stubFor(get(urlPathEqualTo(<span class="string">"/api/vacation/isWeekend"</span>))</div><div class="line">                .willReturn(aResponse()</div><div class="line">                        .withStatus(OK.value())</div><div class="line">                        .withHeader(CONTENT_TYPE, APPLICATION_JSON_UTF8_VALUE)</div><div class="line">                        .withBody(objectMapper.writeValueAsString(expected))));</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="meta">@Test</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testIsWeekendProxy</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</div><div class="line">        <span class="comment">// 构造请求参数</span></div><div class="line">        VacationRequest request = <span class="keyword">new</span> VacationRequest();</div><div class="line">        request.setType(PERSONAL);</div><div class="line">        OffsetDateTime lastSunday = OffsetDateTime.now().with(TemporalAdjusters.previous(SUNDAY));</div><div class="line">        request.setStart(lastSunday);</div><div class="line">        request.setEnd(lastSunday.plusDays(<span class="number">1</span>));</div><div class="line"></div><div class="line">        MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.get(<span class="string">"/vacation/isWeekend"</span>);</div><div class="line">        request.toMap().forEach((k, v) -&gt; builder.param(k, v));</div><div class="line">        JsonResult&lt;Boolean&gt; expected = JsonResult.ok(<span class="keyword">true</span>);</div><div class="line"></div><div class="line">        mockMvc.perform(builder)</div><div class="line">                <span class="comment">// 验证返回结果和预先设计的结果一致</span></div><div class="line">                .andExpect(status().isOk())</div><div class="line">                .andExpect(content().contentType(APPLICATION_JSON_UTF8))</div><div class="line">                .andExpect(content().string(objectMapper.writeValueAsString(expected)));</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>和Mockito类似，在测试用例中集成WireMock的基本步骤是：</p>
+<ol>
+<li>声明代理服务，以替代被Mock的微服务</li>
+<li>通过WireMock API定制代理服务的返回结果</li>
+<li>调用代理服务，获得预先设计的结果</li>
+</ol>
+<p>值得一提的是，除了API方式的集成，WireMock还支持以Jar包的形式独立运行，从配置文件中加载预先设计的响应结果，以替代被Mock的微服务。更多信息可以参阅官方文档。</p>
+<p>其他类似的Mock API的框架还有OkHttp的<a href="https://github.com/square/okhttp/tree/master/mockwebserver" target="_blank" rel="external">mockwebserver</a>，<a href="https://github.com/dreamhead/moco" target="_blank" rel="external">moco</a>和<a href="http://www.mock-server.com/" target="_blank" rel="external">mockserver</a>。mockwebserver也属于嵌入式Mock框架的范畴，但功能过于简单。moco，mockserver虽然功能完善，但需要独立部署，和WireMock相比不具有优势。</p>
+<h2 id="4-小结"><a href="#4-小结" class="headerlink" title="4 小结"></a>4 小结</h2><p>以上就是我对Mock技术的一些见解，欢迎你到我的<a href="https://github.com/emac/emac.github.io/issues/2" target="_blank" rel="external">留言板</a>分享，和大家一起过过招。最后还要说一句，Mock技术虽然强大，但主要还是适用于单元测试，在集成测试，性能测试，自动化测试等其他测试领域使用并不多。</p>
+<h2 id="5-参考"><a href="#5-参考" class="headerlink" title="5 参考"></a>5 参考</h2><ul>
+<li><a href="https://www.linkedin.com/pulse/moving-from-quality-assurance-engineering-brief-history-nitin-mehra" target="_blank" rel="external">Moving from Quality Assurance to Quality Engineering. A brief history in time and what lies ahead.</a></li>
+</ul>
+]]></content:encoded>
+      
+      <comments>http://emacoo.cn/arch/test-mock/#disqus_thread</comments>
+    </item>
     
     <item>
       <title>【Spring】详解Spring MVC中不同格式的POST请求参数的数据类型转换过程</title>
@@ -85,8 +136,8 @@
     
     <item>
       <title>JUnit 5的前世今生</title>
-      <link>http://emacoo.cn/backend/junit5/</link>
-      <guid>http://emacoo.cn/backend/junit5/</guid>
+      <link>http://emacoo.cn/arch/junit5/</link>
+      <guid>http://emacoo.cn/arch/junit5/</guid>
       <pubDate>Sat, 08 Apr 2017 16:00:00 GMT</pubDate>
       <description>
       
@@ -150,7 +201,7 @@
 </ul>
 ]]></content:encoded>
       
-      <comments>http://emacoo.cn/backend/junit5/#disqus_thread</comments>
+      <comments>http://emacoo.cn/arch/junit5/#disqus_thread</comments>
     </item>
     
     <item>
