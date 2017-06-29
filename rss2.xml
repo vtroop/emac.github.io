@@ -8,7 +8,7 @@
     <atom:link href="/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description></description>
-    <pubDate>Thu, 29 Jun 2017 16:22:32 GMT</pubDate>
+    <pubDate>Thu, 29 Jun 2017 23:55:33 GMT</pubDate>
     <generator>http://hexo.io/</generator>
     
     <item>
@@ -32,7 +32,7 @@
 </ul>
 </blockquote>
 <h2 id="1-回顾"><a href="#1-回顾" class="headerlink" title="1 回顾"></a>1 回顾</h2><p>通过前两篇的介绍，相信你对响应式编程和Spring 5已经有了一个初步的了解。下面我将以一个简单的Spring 5应用为例，介绍如何使用Spring 5快速搭建一个响应式Web应用（以下简称RP应用）。</p>
-<h2 id="2-实战"><a href="#2-实战" class="headerlink" title="2 实战"></a>2 实战</h2><h3 id="2-1-环境准备"><a href="#2-1-环境准备" class="headerlink" title="2.1 环境准备"></a>2.1 环境准备</h3><p>首先，从GitHub下载我的这个示例应用，地址是<a href="https://github.com/emac/spring5-features-demo。" target="_blank" rel="external">https://github.com/emac/spring5-features-demo。</a></p>
+<h2 id="2-实战"><a href="#2-实战" class="headerlink" title="2 实战"></a>2 实战</h2><h3 id="2-1-环境准备"><a href="#2-1-环境准备" class="headerlink" title="2.1 环境准备"></a>2.1 环境准备</h3><p>首先，从GitHub下载我的这个示例应用，地址是<a href="https://github.com/emac/spring5-features-demo" target="_blank" rel="external">https://github.com/emac/spring5-features-demo</a>。</p>
 <p>然后，从MongoDB<a href="https://www.mongodb.com/download-center#community" target="_blank" rel="external">官网</a>下载最新版本的MongoDB，然后在命令行下运行<code>mongod &amp;</code>启动服务。</p>
 <p>现在，可以先试着跑一下项目中自带的测试用例。</p>
 <figure class="highlight plain"><figcaption><span>clean build```</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">### 2.2 依赖介绍</div><div class="line"></div><div class="line">接下来，看一下这个示例应用里的和响应式编程相关的依赖。</div></pre></td></tr></table></figure>
