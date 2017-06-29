@@ -88,7 +88,7 @@
 <h2 id="1-响应式编程总览"><a href="#1-响应式编程总览" class="headerlink" title="1 响应式编程总览"></a>1 响应式编程总览</h2><blockquote>
 <p>In computing, reactive programming is an asynchronous programming paradigm concerned with data streams and the propagation of change. - <a href="https://en.wikipedia.org/wiki/Reactive_programming" target="_blank" rel="external">Reactive programming - Wikipedia</a></p>
 </blockquote>
-<p>在上述响应式编程（后面简称RP）的定义中，除了异步编程，还包含两个重要的关键词：</p>
+<p>在上述响应式编程（以下简称RP）的定义中，除了异步编程，还包含两个重要的关键词：</p>
 <ul>
 <li>Data streams: 即数据流，分为静态数据流（比如数组，文件）和动态数据流（比如事件流，日志流）两种。基于数据流模型，RP得以提供一套统一的Stream风格的数据处理接口。和Java 8中的Stream API相比，RP API除了支持静态数据流，还支持动态数据流，并且允许复用和同时接入多个订阅者。</li>
 <li>The propagation of change: 变化传播，简单来说就是以一个数据流为输入，经过一连串操作转化为另一个数据流，然后分发给各个订阅者的过程。这就有点像函数式编程中的组合函数，将多个函数串联起来，把一组输入数据转化为格式迥异的输出数据。</li>
