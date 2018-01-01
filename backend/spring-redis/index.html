@@ -78,7 +78,7 @@
     <div class="picture-container">
       
     </div>
-    <h2 id="Redis简介"><a href="#Redis简介" class="headerlink" title="Redis简介"></a>Redis简介</h2><p><a href="http://redis.io/" target="_blank" rel="external">Redis</a>是目前业界使用最广泛的内存数据存储。相比memcached，Redis支持更丰富的数据结构，例如hashes, lists, sets等，同时支持数据持久化。除此之外，Redis还提供一些类数据库的特性，比如事务，HA，主从库。可以说Redis兼具了缓存系统和数据库的一些特性，因此有着丰富的应用场景。本文介绍Redis在Spring Boot中两个典型的应用场景。</p>
+    <h2 id="Redis简介"><a href="#Redis简介" class="headerlink" title="Redis简介"></a>Redis简介</h2><p><a href="http://redis.io/" target="_blank" rel="noopener">Redis</a>是目前业界使用最广泛的内存数据存储。相比memcached，Redis支持更丰富的数据结构，例如hashes, lists, sets等，同时支持数据持久化。除此之外，Redis还提供一些类数据库的特性，比如事务，HA，主从库。可以说Redis兼具了缓存系统和数据库的一些特性，因此有着丰富的应用场景。本文介绍Redis在Spring Boot中两个典型的应用场景。</p>
 <h2 id="场景1：数据缓存"><a href="#场景1：数据缓存" class="headerlink" title="场景1：数据缓存"></a>场景1：数据缓存</h2><p>第一个应用场景是数据缓存，最典型的当属缓存数据库查询结果。对于高频读低频写的数据，使用缓存可以第一，加速读取过程，第二，降低数据库压力。通过引入spring-boot-starter-redis依赖和注册RedisCacheManager，Redis可以无缝的集成进Spring的缓存系统，自动绑定@Cacheable, @CacheEvict等缓存注解。</p>
 <p>引入依赖：</p>
 <pre><code>&lt;dependency&gt;
@@ -160,9 +160,9 @@ public class SessionConfig {
 <p><img src="QQ20160313-0.png" alt=""></p>
 <h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>上面结合示例代码介绍了数据缓存，共享Session两个Redis的典型应用场景，除此之外，还有分布式锁，全局计数器等高级应用场景，以后在其他文章中再详细介绍。</p>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
-<li><a href="http://docs.spring.io/spring-data/redis/docs/current/reference/html/" target="_blank" rel="external">Spring Data Redis</a></li>
-<li><a href="http://jinnianshilongnian.iteye.com/blog/2001040" target="_blank" rel="external">Spring Cache抽象详解</a></li>
-<li><a href="http://docs.spring.io/spring-session/docs/current/reference/html5/#httpsession-redis" target="_blank" rel="external">HttpSession with Redis</a></li>
+<li><a href="http://docs.spring.io/spring-data/redis/docs/current/reference/html/" target="_blank" rel="noopener">Spring Data Redis</a></li>
+<li><a href="http://jinnianshilongnian.iteye.com/blog/2001040" target="_blank" rel="noopener">Spring Cache抽象详解</a></li>
+<li><a href="http://docs.spring.io/spring-session/docs/current/reference/html5/#httpsession-redis" target="_blank" rel="noopener">HttpSession with Redis</a></li>
 </ul>
 
 

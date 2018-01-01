@@ -90,11 +90,11 @@
 <li>只做必要的微服务治理</li>
 </ol>
 <p>第一条定下了此次改造的基调，降低了方案无法落地的风险，确保了项目的整体可行性。第二条让我们站在巨人的肩膀上，不重复造轮子，聚焦在问题本身，而不是工具。第三条缩减项目范围，避免过度工程，以战养兵，不打无用之仗。</p>
-<h2 id="2-微服务简介"><a href="#2-微服务简介" class="headerlink" title="2 微服务简介"></a>2 微服务简介</h2><h3 id="3个关键词"><a href="#3个关键词" class="headerlink" title="3个关键词"></a>3个关键词</h3><p>有关微服务的定义，最权威的版本莫属微服务之父Martin Fowler在<a href="http://martinfowler.com/microservices/" target="_blank" rel="external">microservices</a>一文中所述：</p>
+<h2 id="2-微服务简介"><a href="#2-微服务简介" class="headerlink" title="2 微服务简介"></a>2 微服务简介</h2><h3 id="3个关键词"><a href="#3个关键词" class="headerlink" title="3个关键词"></a>3个关键词</h3><p>有关微服务的定义，最权威的版本莫属微服务之父Martin Fowler在<a href="http://martinfowler.com/microservices/" target="_blank" rel="noopener">microservices</a>一文中所述：</p>
 <blockquote>
 <p>In short, the microservice architectural style is an approach to developing a single application as a suite of small services, each running in its own process and communicating with lightweight mechanisms, often an HTTP resource API. These services are built around business capabilities and independently deployable by fully automated deployment machinery. – James Lewis and Martin Fowler</p>
 </blockquote>
-<p>注意其中有3个关键词，small，independently deployable和automated deployment。small对应的就是微服务的微，很多初次接触微服务的同学对微的理解往往会停留在实现层面，以为代码少就是微，但实际上，这里的微更多的是体现在逻辑层面。微服务的一个重要设计原则是share as little as possible，什么意思呢？就是说每个微服务应该设计成边界清晰不重叠，数据独享不共享，也就是我们常说的高内聚、低耦合。保证了small，才能做到independently deployable。而实现automated deployment的关键是DevOps文化，可参见Fowler另一篇谈<a href="http://martinfowler.com/bliki/DevOpsCulture.html" target="_blank" rel="external">DevOps</a>的文章。</p>
+<p>注意其中有3个关键词，small，independently deployable和automated deployment。small对应的就是微服务的微，很多初次接触微服务的同学对微的理解往往会停留在实现层面，以为代码少就是微，但实际上，这里的微更多的是体现在逻辑层面。微服务的一个重要设计原则是share as little as possible，什么意思呢？就是说每个微服务应该设计成边界清晰不重叠，数据独享不共享，也就是我们常说的高内聚、低耦合。保证了small，才能做到independently deployable。而实现automated deployment的关键是DevOps文化，可参见Fowler另一篇谈<a href="http://martinfowler.com/bliki/DevOpsCulture.html" target="_blank" rel="noopener">DevOps</a>的文章。</p>
 <p>需要提醒的是，随着业务复杂度的上升，一个微服务可能需要拆分为更多更细粒度的微服务，比方说，一开始只是一个简单的订单服务，后面逐步拆分出清算，支付，结算，对账等其他服务。</p>
 <h3 id="康威定律"><a href="#康威定律" class="headerlink" title="康威定律"></a>康威定律</h3><p>与单体应用拆分为微服务的过程类似，随着公司规模的不断扩大，一个组织势必会分化出多个更小的组织。根据康威定律，组织结构决定系统结构，因此，从这个层面来说，微服务也是一种必然。</p>
 <blockquote>
@@ -105,7 +105,7 @@
 <p>另一方面，由于采用了分布式架构，微服务无法再简单的通过数据库事务来保证强一致性，而是通过消息中间件或者某种事务补偿机制来保证最终一致性，比如微信朋友圈的点赞，淘宝订单的物流状态。其次，在微服务阶段，随着应用数量的激增，一次发布往往涉及多个应用，加上异构性带来的部署方式的多样性，对团队的运维水平尤其是自动化水平提出了更高的要求，运维和开发的边界进一步模糊。</p>
 <p><img src="http://martinfowler.com/bliki/images/microservicePrerequisites/sketch.png" alt=""></p>
 <h3 id="领域知识"><a href="#领域知识" class="headerlink" title="领域知识"></a>领域知识</h3><p>除了组织架构和技术取舍，领域知识是另一个非常重要的决策因素。对于不熟悉的业务领域，很难第一次就把各个微服务的边界和接口定义正确，一旦开始开发，重构成本就会非常可观。反过来说，当对领域知识有了一定的积累，再重构一个单体应用就会容易的多。</p>
-<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>综上所述，虽然微服务看上去很美，但在决定采用微服务架构之前，不仅要仔细考量团队的技术水平（包括知识结构，理论深度，经验积累和技术氛围），还应综合考虑项目的时间范围，领域知识的熟悉程度，以及所在组织的规模架构。除非这些前提条件都满足，否则单体应用是更适合的选择，就像Fowler<a href="http://martinfowler.com/bliki/MonolithFirst.html" target="_blank" rel="external">建议</a>的那样。</p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>综上所述，虽然微服务看上去很美，但在决定采用微服务架构之前，不仅要仔细考量团队的技术水平（包括知识结构，理论深度，经验积累和技术氛围），还应综合考虑项目的时间范围，领域知识的熟悉程度，以及所在组织的规模架构。除非这些前提条件都满足，否则单体应用是更适合的选择，就像Fowler<a href="http://martinfowler.com/bliki/MonolithFirst.html" target="_blank" rel="noopener">建议</a>的那样。</p>
 <p><img src="http://martinfowler.com/bliki/images/microservice-verdict/path.png" alt=""></p>
 <h2 id="3-微服务化总览"><a href="#3-微服务化总览" class="headerlink" title="3 微服务化总览"></a>3 微服务化总览</h2><p><img src="microservice.png" alt=""></p>
 <p>上图是XR微服务化第一阶段的整体架构图。可以看到，一些支撑微服务的必要组件都已包含其中：</p>
@@ -113,21 +113,21 @@
 <li>服务注册中心：所有服务注册到Consul集群，集成Nginx实现负载均衡，使用Hystrix实现简单的服务降级和熔断机制</li>
 <li>CI/CD：利用<a href="http://emacoo.cn/devops/jenkins-pipeline-tips">Jenkins Pipeline</a>实现<a href="http://emacoo.cn/devops/ci-cd-hot-deployment">不停机发布</a></li>
 <li>日志平台：扩展ELK加上Redis缓存</li>
-<li>配置中心：使用自研的<a href="https://zybuluo.com/emac/note/241756" target="_blank" rel="external">Matrix</a>系统，最小化对已有应用的侵入性，保证异构系统的兼容性</li>
+<li>配置中心：使用自研的<a href="https://zybuluo.com/emac/note/241756" target="_blank" rel="noopener">Matrix</a>系统，最小化对已有应用的侵入性，保证异构系统的兼容性</li>
 <li>授权中心：基于Spring Security OAuth，同时支持SSO</li>
 <li>消息中心：选用RabbitMQ作为消息中间件</li>
 <li>监控平台：利用Consul API获取服务状态，通过Zookeeper触发告警</li>
 </ul>
 <p>在微服务化系列的后续文章中，我会针对服务注册、配置中心和授权中心分别展开介绍实施过程中的一些细节和经验。敬请期待。</p>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
-<li><a href="http://martinfowler.com/microservices/" target="_blank" rel="external">Microservices Resource Guide</a></li>
-<li><a href="http://slides.com/emacooshen/soa/#/" target="_blank" rel="external">企业基础架构浅析</a></li>
-<li><a href="http://callistaenterprise.se/blogg/teknik/2015/03/25/an-operations-model-for-microservices/" target="_blank" rel="external">An operations model for Microservices</a></li>
-<li><a href="https://mp.weixin.qq.com/s?__biz=MzA5Nzc4OTA1Mw==&amp;mid=407641457&amp;idx=1&amp;sn=183d27056f3bd8ef17e77a3c15dfb3dd" target="_blank" rel="external">实施微服务，我们需要哪些基础框架？</a></li>
-<li><a href="http://mp.weixin.qq.com/s?__biz=MzA5Nzc4OTA1Mw%3D%3D&amp;from=timeline&amp;idx=1&amp;isappinstalled=0&amp;mid=411129391&amp;scene=2&amp;sn=ebf06fb5cc4a5f57f86341ba4114cab8&amp;srcid=0409K1M3NlgPnoCzUXN8wiFP" target="_blank" rel="external">架构的本质是管理复杂性，微服务本身也是架构演化的结果</a></li>
-<li><a href="http://mp.weixin.qq.com/s?__biz=MzA4MzQ1NjQ5Nw%3D%3D&amp;idx=1&amp;mid=402005063&amp;sn=6b714f647c29afb15598a1ca3dbd78c2" target="_blank" rel="external">应用架构一团糟？如何将单体应用改造为微服务</a></li>
-<li><a href="http://mp.weixin.qq.com/s?__biz=MzIwMjE5MDU4OA==&amp;mid=2653119912&amp;idx=1&amp;sn=d3b08b362de3d895fe0a088dcdc2380c&amp;scene=23&amp;srcid=0806PBMw9lhxnOpEJhLYuvCC#rd" target="_blank" rel="external">一个值得参考的服务化体系改造案例</a></li>
-<li><a href="http://mp.weixin.qq.com/s?__biz=MjM5MDE0Mjc4MA==&amp;idx=1&amp;mid=2650993889&amp;scene=0&amp;sn=3d8edd0fa55be53d85235212be3a9505" target="_blank" rel="external">华为实施微服务架构的五大军规</a></li>
+<li><a href="http://martinfowler.com/microservices/" target="_blank" rel="noopener">Microservices Resource Guide</a></li>
+<li><a href="http://slides.com/emacooshen/soa/#/" target="_blank" rel="noopener">企业基础架构浅析</a></li>
+<li><a href="http://callistaenterprise.se/blogg/teknik/2015/03/25/an-operations-model-for-microservices/" target="_blank" rel="noopener">An operations model for Microservices</a></li>
+<li><a href="https://mp.weixin.qq.com/s?__biz=MzA5Nzc4OTA1Mw==&amp;mid=407641457&amp;idx=1&amp;sn=183d27056f3bd8ef17e77a3c15dfb3dd" target="_blank" rel="noopener">实施微服务，我们需要哪些基础框架？</a></li>
+<li><a href="http://mp.weixin.qq.com/s?__biz=MzA5Nzc4OTA1Mw%3D%3D&amp;from=timeline&amp;idx=1&amp;isappinstalled=0&amp;mid=411129391&amp;scene=2&amp;sn=ebf06fb5cc4a5f57f86341ba4114cab8&amp;srcid=0409K1M3NlgPnoCzUXN8wiFP" target="_blank" rel="noopener">架构的本质是管理复杂性，微服务本身也是架构演化的结果</a></li>
+<li><a href="http://mp.weixin.qq.com/s?__biz=MzA4MzQ1NjQ5Nw%3D%3D&amp;idx=1&amp;mid=402005063&amp;sn=6b714f647c29afb15598a1ca3dbd78c2" target="_blank" rel="noopener">应用架构一团糟？如何将单体应用改造为微服务</a></li>
+<li><a href="http://mp.weixin.qq.com/s?__biz=MzIwMjE5MDU4OA==&amp;mid=2653119912&amp;idx=1&amp;sn=d3b08b362de3d895fe0a088dcdc2380c&amp;scene=23&amp;srcid=0806PBMw9lhxnOpEJhLYuvCC#rd" target="_blank" rel="noopener">一个值得参考的服务化体系改造案例</a></li>
+<li><a href="http://mp.weixin.qq.com/s?__biz=MjM5MDE0Mjc4MA==&amp;idx=1&amp;mid=2650993889&amp;scene=0&amp;sn=3d8edd0fa55be53d85235212be3a9505" target="_blank" rel="noopener">华为实施微服务架构的五大军规</a></li>
 </ul>
 
 

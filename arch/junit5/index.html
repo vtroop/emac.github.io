@@ -86,9 +86,9 @@
 </blockquote>
 <p>对Java程序员而言，JUnit无疑是使用最广泛的单元测试框架。自2006年初JUnit 4发布之后，11年间陆陆续续更新了13个小版本，最新的4.12版本是在2014年底发布的。在现今新技术、新框架层出不穷的IT圈，JUnit的版本更新速度不可谓不缓慢，这一点上，和去年同期发布的<a href="http://emacoo.cn/devops/jenkins-2-0-from-ci-to-cd/">Jenkins 2.0</a>如出一辙，后者也花了11年才升级了一个大版本。让我们回到2006年初，看看当时的Java程序员都玩些啥？</p>
 <ul>
-<li><a href="https://en.wikipedia.org/wiki/Java_(programming_language" target="_blank" rel="external">Java 5</a>发布1年多，很多公司还在使用JDK 1.4，离Java 6正式发布还有大半年，更别提Java 8了。</li>
-<li><a href="https://en.wikipedia.org/wiki/Spring_Framework" target="_blank" rel="external">Spring</a>初出茅庐，离第一桶金Jolt和JAX大奖还有几个月，离2.0发布还有大半年，更别提Spring Boot和Spring Cloud了。</li>
-<li><a href="https://en.wikipedia.org/wiki/Apache_Maven" target="_blank" rel="external">Maven</a>比Spring老道一点，不过也只是2.0 Beta阶段，更别提Maven 3了。</li>
+<li><a href="https://en.wikipedia.org/wiki/Java_(programming_language" target="_blank" rel="noopener">Java 5</a>发布1年多，很多公司还在使用JDK 1.4，离Java 6正式发布还有大半年，更别提Java 8了。</li>
+<li><a href="https://en.wikipedia.org/wiki/Spring_Framework" target="_blank" rel="noopener">Spring</a>初出茅庐，离第一桶金Jolt和JAX大奖还有几个月，离2.0发布还有大半年，更别提Spring Boot和Spring Cloud了。</li>
+<li><a href="https://en.wikipedia.org/wiki/Apache_Maven" target="_blank" rel="noopener">Maven</a>比Spring老道一点，不过也只是2.0 Beta阶段，更别提Maven 3了。</li>
 </ul>
 <p>了解了JUnit 4的出生背景，就不难理解如今JUnit 4的问题所在了。</p>
 <ul>
@@ -101,7 +101,7 @@
 <p>你的是我的，我的还是我的。</p>
 </blockquote>
 <p>什么是JUnit as a Platform？既然敢叫Platform，那目光自然就不能局限于JUnit自己了。通过引入JUnit Platform，JUnit 5不但可以运行新老版本的JUnit测试，甚至还可以运行别人家的单元测试，比如TestNG。套用一个现在流行的词，就叫降维打击。</p>
-<p><img src="junit-5-architecture.png" alt=""><br><em>图片出处：<a href="https://www.infoq.com/articles/JUnit-5-Early-Test-Drive" target="_blank" rel="external">JUnit 5 - An Early Test Drive - Part 1</a></em></p>
+<p><img src="junit-5-architecture.png" alt=""><br><em>图片出处：<a href="https://www.infoq.com/articles/JUnit-5-Early-Test-Drive" target="_blank" rel="noopener">JUnit 5 - An Early Test Drive - Part 1</a></em></p>
 <p>从上图可以看到，完整的JUnit 5平台从上至下分为四层：</p>
 <ol>
 <li>面向developer的API，比如各种测试注解</li>
@@ -118,19 +118,19 @@
 <li>@Nested注解：支持BDT(Behavior Driven Testing)风格的单元测试。</li>
 </ul>
 </li>
-<li><a href="http://junit.org/junit5/docs/current/user-guide/#writing-tests-parameterized-tests" target="_blank" rel="external">Parameterized Tests</a>：批量生成参数化的单元测试，比如针对一个枚举类，为其每一个枚举值生成一个单元测试。</li>
-<li><a href="http://junit.org/junit5/docs/current/user-guide/#writing-tests-dynamic-tests" target="_blank" rel="external">Dynamic Tests</a>：程序化生成单元测试，比如动态从数据库中读取数据，生成单元测试。</li>
-<li><a href="http://junit.org/junit5/docs/current/user-guide/#extensions" target="_blank" rel="external">Extention</a>：JUnit 5提供了多种扩展方式，涉及测试周期的各个阶段，比如激活条件，参数解析，回调函数，异常处理等。通过实现特定接口，配合@ExtendWith注解，你很容易就可以重新定义一个单元测试的执行流程。</li>
+<li><a href="http://junit.org/junit5/docs/current/user-guide/#writing-tests-parameterized-tests" target="_blank" rel="noopener">Parameterized Tests</a>：批量生成参数化的单元测试，比如针对一个枚举类，为其每一个枚举值生成一个单元测试。</li>
+<li><a href="http://junit.org/junit5/docs/current/user-guide/#writing-tests-dynamic-tests" target="_blank" rel="noopener">Dynamic Tests</a>：程序化生成单元测试，比如动态从数据库中读取数据，生成单元测试。</li>
+<li><a href="http://junit.org/junit5/docs/current/user-guide/#extensions" target="_blank" rel="noopener">Extention</a>：JUnit 5提供了多种扩展方式，涉及测试周期的各个阶段，比如激活条件，参数解析，回调函数，异常处理等。通过实现特定接口，配合@ExtendWith注解，你很容易就可以重新定义一个单元测试的执行流程。</li>
 </ul>
-<p>为了更好的理解这些特性，不妨去GitHub看一下JUnit官方的<a href="https://github.com/junit-team/junit5-samples" target="_blank" rel="external">示例工程</a>。</p>
-<h2 id="Roadmap"><a href="#Roadmap" class="headerlink" title="Roadmap"></a>Roadmap</h2><p>根据最新的JUnit<a href="https://github.com/junit-team/junit5/wiki/Roadmap" target="_blank" rel="external">官方文档</a>，JUnit 5将于今年第三季度的某一时刻发布，在此之前，还将发布若干个RC版本。目前最新的稳定版本是5.0.0-M4。</p>
+<p>为了更好的理解这些特性，不妨去GitHub看一下JUnit官方的<a href="https://github.com/junit-team/junit5-samples" target="_blank" rel="noopener">示例工程</a>。</p>
+<h2 id="Roadmap"><a href="#Roadmap" class="headerlink" title="Roadmap"></a>Roadmap</h2><p>根据最新的JUnit<a href="https://github.com/junit-team/junit5/wiki/Roadmap" target="_blank" rel="noopener">官方文档</a>，JUnit 5将于今年第三季度的某一时刻发布，在此之前，还将发布若干个RC版本。目前最新的稳定版本是5.0.0-M4。</p>
 <p>你，准备好了吗？</p>
-<h2 id="附录：JUnit-5和JUnit-4的快速对比"><a href="#附录：JUnit-5和JUnit-4的快速对比" class="headerlink" title="附录：JUnit 5和JUnit 4的快速对比"></a>附录：JUnit 5和JUnit 4的快速对比</h2><p><img src="junit-5-vs-junit-4-9-638.jpg" alt=""><br><img src="junit-5-vs-junit-4-10-638.jpg" alt=""><br><em>图片出处：<a href="https://www.slideshare.net/rkmael/junit-5-vs-junit-4" target="_blank" rel="external">JUnit 5 vs JUnit 4</a></em></p>
+<h2 id="附录：JUnit-5和JUnit-4的快速对比"><a href="#附录：JUnit-5和JUnit-4的快速对比" class="headerlink" title="附录：JUnit 5和JUnit 4的快速对比"></a>附录：JUnit 5和JUnit 4的快速对比</h2><p><img src="junit-5-vs-junit-4-9-638.jpg" alt=""><br><img src="junit-5-vs-junit-4-10-638.jpg" alt=""><br><em>图片出处：<a href="https://www.slideshare.net/rkmael/junit-5-vs-junit-4" target="_blank" rel="noopener">JUnit 5 vs JUnit 4</a></em></p>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
-<li><a href="http://junit.org/junit5/docs/current/user-guide/" target="_blank" rel="external">JUnit 5 User Guide</a></li>
-<li><a href="https://www.infoq.com/articles/JUnit-5-Early-Test-Drive" target="_blank" rel="external">JUnit 5 - An Early Test Drive - Part 1</a></li>
-<li><a href="https://www.slideshare.net/SpringCentral/testing-with-spring-43-junit-5-and-beyond" target="_blank" rel="external">Testing with Spring 4.3, JUnit 5, and Beyond</a></li>
-<li><a href="https://objectpartners.com/2016/07/26/junit-5-with-spring-boot-plus-kotlin/" target="_blank" rel="external">JUnit 5 with Spring Boot (plus Kotlin)</a></li>
+<li><a href="http://junit.org/junit5/docs/current/user-guide/" target="_blank" rel="noopener">JUnit 5 User Guide</a></li>
+<li><a href="https://www.infoq.com/articles/JUnit-5-Early-Test-Drive" target="_blank" rel="noopener">JUnit 5 - An Early Test Drive - Part 1</a></li>
+<li><a href="https://www.slideshare.net/SpringCentral/testing-with-spring-43-junit-5-and-beyond" target="_blank" rel="noopener">Testing with Spring 4.3, JUnit 5, and Beyond</a></li>
+<li><a href="https://objectpartners.com/2016/07/26/junit-5-with-spring-boot-plus-kotlin/" target="_blank" rel="noopener">JUnit 5 with Spring Boot (plus Kotlin)</a></li>
 </ul>
 
 
