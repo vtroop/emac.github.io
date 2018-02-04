@@ -47,7 +47,7 @@
 <li>默认创建的应用鉴权为空，即可以在公网直接访问。</li>
 </ul>
 <h2 id="4-小结"><a href="#4-小结" class="headerlink" title="4 小结"></a>4 小结</h2><p>以上简单介绍了三种在AWS Lambda上创建函数的方式，希望对你理解Serverless有所帮助。有关Serverless其他特性的研究，以后有机会我再跟你分享。欢迎你到我的<a href="https://github.com/emac/emac.github.io/issues/2" target="_blank" rel="noopener">留言板</a>留言交流，和大家一起过过招。</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<h2 id="5-参考"><a href="#5-参考" class="headerlink" title="5 参考"></a>5 参考</h2><ul>
 <li><a href="http://serverless.ink/" target="_blank" rel="noopener">Serverless 应用开发指南</a></li>
 <li><a href="https://spring.io/blog/2017/07/05/introducing-spring-cloud-function" target="_blank" rel="noopener">Introducing Spring Cloud Function</a></li>
 </ul>
